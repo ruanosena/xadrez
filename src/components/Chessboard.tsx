@@ -1,4 +1,4 @@
-import { HTMLAttributes, useMemo } from "react";
+import { HTMLAttributes, useCallback, useMemo } from "react";
 import { cn } from "../lib/utils";
 import { Tile } from "./Tile";
 
@@ -35,6 +35,58 @@ const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 export function Chessboard({ className, ...props }: Props) {
+  const ref = useCallback((node: HTMLDivElement | null) => {
+    if (node !== null) {
+      let activePiece: HTMLElement | undefined;
+
+      node.addEventListener("pointerdown", (e) => {
+        const element = e.target as HTMLElement;
+        if (element.dataset["tile"] === "piece") {
+          const x = e.clientX - element.clientWidth / 2;
+          const y = e.clientY - element.clientHeight / 2;
+
+          element.style.position = "absolute";
+          element.style.left = `${x}px`;
+          element.style.top = `${y}px`;
+
+          activePiece = element;
+        }
+      });
+
+      node.addEventListener("pointermove", (e) => {
+        if (activePiece) {
+          const minX = node.offsetLeft - activePiece.clientWidth * 0.29;
+          const minY = node.offsetTop - activePiece.clientHeight * 0.19;
+          const maxX =
+            node.offsetLeft +
+            node.clientWidth -
+            activePiece.clientWidth / 2 -
+            activePiece.clientWidth * 0.29;
+          const maxY =
+            node.offsetTop +
+            node.clientHeight -
+            activePiece.clientWidth / 2 -
+            activePiece.clientHeight * 0.31;
+          const x = e.clientX - activePiece.clientWidth / 2;
+          const y = e.clientY - activePiece.clientHeight / 2;
+
+          activePiece.style.position = "absolute";
+          if (x < minX) activePiece.style.left = `${minX}px`;
+          else if (x > maxX) activePiece.style.left = `${maxX}px`;
+          else activePiece.style.left = `${x}px`;
+
+          if (y < minY) activePiece.style.top = `${minY}px`;
+          else if (y > maxY) activePiece.style.top = `${maxY}px`;
+          else activePiece.style.top = `${y}px`;
+        }
+      });
+
+      node.addEventListener("pointerup", () => {
+        activePiece = undefined;
+      });
+    }
+  }, []);
+
   const board = useMemo(() => {
     const result: JSX.Element[] = [];
 
@@ -60,6 +112,7 @@ export function Chessboard({ className, ...props }: Props) {
 
   return (
     <div
+      ref={ref}
       className={cn(
         "grid h-[800px] w-[800px] grid-cols-8 grid-rows-8 bg-blue-600",
         className,
