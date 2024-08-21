@@ -1,5 +1,5 @@
-import { HTMLAttributes, useCallback, useMemo } from "react";
-import { cn } from "../lib/utils";
+import { HTMLAttributes, useCallback, useMemo, useRef, useState } from "react";
+import Referee, { cn } from "../lib/utils";
 import { Tile } from "./Tile";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {}
@@ -8,40 +8,117 @@ interface Piece {
   imageSrc: string;
   x: number;
   y: number;
+  type: PieceType;
 }
 
-const pieces: Piece[] = [];
-
-for (let p = 0; p < 2; p++) {
-  const type = p === 0 ? "b" : "w";
-  const y = p === 0 ? 7 : 0;
-  pieces.push({ imageSrc: `./pieces/rook_${type}.png`, x: 0, y });
-  pieces.push({ imageSrc: `./pieces/rook_${type}.png`, x: 7, y });
-  pieces.push({ imageSrc: `./pieces/knight_${type}.png`, x: 1, y });
-  pieces.push({ imageSrc: `./pieces/knight_${type}.png`, x: 6, y });
-  pieces.push({ imageSrc: `./pieces/bishop_${type}.png`, x: 2, y });
-  pieces.push({ imageSrc: `./pieces/bishop_${type}.png`, x: 5, y });
-  pieces.push({ imageSrc: `./pieces/queen_${type}.png`, x: 3, y });
-  pieces.push({ imageSrc: `./pieces/king_${type}.png`, x: 4, y });
+export enum PieceType {
+  PAWN,
+  BISHOP,
+  KNIGHT,
+  ROOK,
+  QUEEN,
+  KING,
 }
-
-for (let i = 0; i < 8; i++)
-  pieces.push({ imageSrc: "./pieces/pawn_b.png", x: i, y: 6 });
-
-for (let i = 0; i < 8; i++)
-  pieces.push({ imageSrc: "./pieces/pawn_w.png", x: i, y: 1 });
 
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 export function Chessboard({ className, ...props }: Props) {
+  const referee = useRef(new Referee());
+  const [pieces, setPieces] = useState<Piece[]>(() => {
+    const result = [];
+
+    for (let p = 0; p < 2; p++) {
+      const type = p === 0 ? "b" : "w";
+      const y = p === 0 ? 7 : 0;
+      result.push({
+        imageSrc: `./pieces/rook_${type}.png`,
+        x: 0,
+        y,
+        type: PieceType.ROOK,
+      });
+      result.push({
+        imageSrc: `./pieces/rook_${type}.png`,
+        x: 7,
+        y,
+        type: PieceType.ROOK,
+      });
+      result.push({
+        imageSrc: `./pieces/knight_${type}.png`,
+        x: 1,
+        y,
+        type: PieceType.KNIGHT,
+      });
+      result.push({
+        imageSrc: `./pieces/knight_${type}.png`,
+        x: 6,
+        y,
+        type: PieceType.KNIGHT,
+      });
+      result.push({
+        imageSrc: `./pieces/bishop_${type}.png`,
+        x: 2,
+        y,
+        type: PieceType.BISHOP,
+      });
+      result.push({
+        imageSrc: `./pieces/bishop_${type}.png`,
+        x: 5,
+        y,
+        type: PieceType.BISHOP,
+      });
+      result.push({
+        imageSrc: `./pieces/queen_${type}.png`,
+        x: 3,
+        y,
+        type: PieceType.QUEEN,
+      });
+      result.push({
+        imageSrc: `./pieces/king_${type}.png`,
+        x: 4,
+        y,
+        type: PieceType.KING,
+      });
+    }
+
+    for (let i = 0; i < 8; i++)
+      result.push({
+        imageSrc: "./pieces/pawn_b.png",
+        x: i,
+        y: 6,
+        type: PieceType.PAWN,
+      });
+
+    for (let i = 0; i < 8; i++)
+      result.push({
+        imageSrc: "./pieces/pawn_w.png",
+        x: i,
+        y: 1,
+        type: PieceType.PAWN,
+      });
+
+    return result;
+  });
+
   const ref = useCallback((node: HTMLDivElement | null) => {
     if (node !== null) {
       let activePiece: HTMLElement | undefined;
+      let gridX: number, gridY: number;
 
       node.addEventListener("pointerdown", (e) => {
         const element = e.target as HTMLElement;
         if (element.dataset["tile"] === "piece") {
+          gridX = Math.floor(
+            (e.clientX - node.offsetLeft) /
+              (node.clientWidth / horizontalAxis.length),
+          );
+          gridY = Math.abs(
+            Math.ceil(
+              (e.clientY - node.offsetTop - node.clientHeight) /
+                (node.clientHeight / verticalAxis.length),
+            ),
+          );
+
           const x = e.clientX - element.clientWidth / 2;
           const y = e.clientY - element.clientHeight / 2;
 
@@ -81,8 +158,31 @@ export function Chessboard({ className, ...props }: Props) {
         }
       });
 
-      node.addEventListener("pointerup", () => {
+      node.addEventListener("pointerup", (e) => {
         activePiece = undefined;
+
+        const x = Math.floor(
+          (e.clientX - node.offsetLeft) /
+            (node.clientWidth / horizontalAxis.length),
+        );
+        const y = Math.abs(
+          Math.ceil(
+            (e.clientY - node.offsetTop - node.clientHeight) /
+              (node.clientHeight / verticalAxis.length),
+          ),
+        );
+
+        // Updates the state of pieces
+        setPieces((value) => {
+          const pieces = value.map((piece) => {
+            if (piece.x === gridX && piece.y === gridY) {
+              piece.x = x;
+              piece.y = y;
+            }
+            return piece;
+          });
+          return pieces;
+        });
       });
     }
   }, []);
@@ -108,7 +208,7 @@ export function Chessboard({ className, ...props }: Props) {
       }
     }
     return result;
-  }, []);
+  }, [pieces]);
 
   return (
     <div
