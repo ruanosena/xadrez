@@ -4,7 +4,7 @@ import { Tile } from "./Tile";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {}
 
-interface Piece {
+export interface Piece {
   imageSrc: string;
   x: number;
   y: number;
@@ -188,10 +188,10 @@ export function Chessboard({ className, ...props }: Props) {
             ),
           );
 
-          // Updates the state of pieces
+          // Rearranja as peças
           setPieces(
             ((activePiece: HTMLElement) => {
-              // Closure of outer scope variable
+              // Closure de variável fora do escopo
               return (value) => {
                 let found = false;
                 return value.map((piece) => {
@@ -204,6 +204,7 @@ export function Chessboard({ className, ...props }: Props) {
                         newY,
                         piece.type,
                         piece.team,
+                        value,
                       )
                     ) {
                       piece.x = newX;
