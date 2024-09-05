@@ -9,6 +9,7 @@ interface Piece {
   x: number;
   y: number;
   type: PieceType;
+  team: TeamType;
 }
 
 export enum PieceType {
@@ -20,6 +21,11 @@ export enum PieceType {
   KING,
 }
 
+export enum TeamType {
+  OPPONENT,
+  OUR,
+}
+
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
@@ -29,55 +35,64 @@ export function Chessboard({ className, ...props }: Props) {
     const result = [];
 
     for (let p = 0; p < 2; p++) {
-      const type = p === 0 ? "b" : "w";
-      const y = p === 0 ? 7 : 0;
+      const teamType = p === 0 ? TeamType.OPPONENT : TeamType.OUR;
+      const type = teamType === TeamType.OPPONENT ? "b" : "w";
+      const y = teamType === TeamType.OPPONENT ? 7 : 0;
       result.push({
         imageSrc: `./pieces/rook_${type}.png`,
         x: 0,
         y,
         type: PieceType.ROOK,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/rook_${type}.png`,
         x: 7,
         y,
         type: PieceType.ROOK,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/knight_${type}.png`,
         x: 1,
         y,
         type: PieceType.KNIGHT,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/knight_${type}.png`,
         x: 6,
         y,
         type: PieceType.KNIGHT,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/bishop_${type}.png`,
         x: 2,
         y,
         type: PieceType.BISHOP,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/bishop_${type}.png`,
         x: 5,
         y,
         type: PieceType.BISHOP,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/queen_${type}.png`,
         x: 3,
         y,
         type: PieceType.QUEEN,
+        team: teamType,
       });
       result.push({
         imageSrc: `./pieces/king_${type}.png`,
         x: 4,
         y,
         type: PieceType.KING,
+        team: teamType,
       });
     }
 
@@ -87,6 +102,7 @@ export function Chessboard({ className, ...props }: Props) {
         x: i,
         y: 6,
         type: PieceType.PAWN,
+        team: TeamType.OPPONENT,
       });
 
     for (let i = 0; i < 8; i++)
@@ -95,6 +111,7 @@ export function Chessboard({ className, ...props }: Props) {
         x: i,
         y: 1,
         type: PieceType.PAWN,
+        team: TeamType.OUR,
       });
 
     return result;
@@ -159,30 +176,53 @@ export function Chessboard({ className, ...props }: Props) {
       });
 
       node.addEventListener("pointerup", (e) => {
-        activePiece = undefined;
+        if (activePiece) {
+          const newX = Math.floor(
+            (e.clientX - node.offsetLeft) /
+              (node.clientWidth / horizontalAxis.length),
+          );
+          const newY = Math.abs(
+            Math.ceil(
+              (e.clientY - node.offsetTop - node.clientHeight) /
+                (node.clientHeight / verticalAxis.length),
+            ),
+          );
 
-        const x = Math.floor(
-          (e.clientX - node.offsetLeft) /
-            (node.clientWidth / horizontalAxis.length),
-        );
-        const y = Math.abs(
-          Math.ceil(
-            (e.clientY - node.offsetTop - node.clientHeight) /
-              (node.clientHeight / verticalAxis.length),
-          ),
-        );
+          // Updates the state of pieces
+          setPieces(
+            ((activePiece: HTMLElement) => {
+              // Closure of outer scope variable
+              return (value) => {
+                let found = false;
+                return value.map((piece) => {
+                  if (!found && piece.x === gridX && piece.y === gridY) {
+                    if (
+                      referee.current.isValidMove(
+                        gridX,
+                        gridY,
+                        newX,
+                        newY,
+                        piece.type,
+                        piece.team,
+                      )
+                    ) {
+                      piece.x = newX;
+                      piece.y = newY;
+                    } else {
+                      activePiece.style.position = "relative";
+                      activePiece.style.removeProperty("top");
+                      activePiece.style.removeProperty("left");
+                    }
+                    found = true;
+                  }
+                  return piece;
+                });
+              };
+            })(activePiece),
+          );
 
-        // Updates the state of pieces
-        setPieces((value) => {
-          const pieces = value.map((piece) => {
-            if (piece.x === gridX && piece.y === gridY) {
-              piece.x = x;
-              piece.y = y;
-            }
-            return piece;
-          });
-          return pieces;
-        });
+          activePiece = undefined;
+        }
       });
     }
   }, []);
