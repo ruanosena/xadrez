@@ -119,7 +119,7 @@ export function Chessboard({ className, ...props }: Props) {
 
   const ref = useCallback((node: HTMLDivElement | null) => {
     if (node !== null) {
-      let activePiece: HTMLElement | undefined;
+      let pieceElement: HTMLElement | undefined;
       let gridX: number, gridY: number;
 
       node.addEventListener("pointerdown", (e) => {
@@ -143,40 +143,40 @@ export function Chessboard({ className, ...props }: Props) {
           element.style.left = `${x}px`;
           element.style.top = `${y}px`;
 
-          activePiece = element;
+          pieceElement = element;
         }
       });
 
       node.addEventListener("pointermove", (e) => {
-        if (activePiece) {
-          const minX = node.offsetLeft - activePiece.clientWidth * 0.29;
-          const minY = node.offsetTop - activePiece.clientHeight * 0.19;
+        if (pieceElement) {
+          const minX = node.offsetLeft - pieceElement.clientWidth * 0.29;
+          const minY = node.offsetTop - pieceElement.clientHeight * 0.19;
           const maxX =
             node.offsetLeft +
             node.clientWidth -
-            activePiece.clientWidth / 2 -
-            activePiece.clientWidth * 0.29;
+            pieceElement.clientWidth / 2 -
+            pieceElement.clientWidth * 0.29;
           const maxY =
             node.offsetTop +
             node.clientHeight -
-            activePiece.clientWidth / 2 -
-            activePiece.clientHeight * 0.31;
-          const x = e.clientX - activePiece.clientWidth / 2;
-          const y = e.clientY - activePiece.clientHeight / 2;
+            pieceElement.clientWidth / 2 -
+            pieceElement.clientHeight * 0.31;
+          const x = e.clientX - pieceElement.clientWidth / 2;
+          const y = e.clientY - pieceElement.clientHeight / 2;
 
-          activePiece.style.position = "absolute";
-          if (x < minX) activePiece.style.left = `${minX}px`;
-          else if (x > maxX) activePiece.style.left = `${maxX}px`;
-          else activePiece.style.left = `${x}px`;
+          pieceElement.style.position = "absolute";
+          if (x < minX) pieceElement.style.left = `${minX}px`;
+          else if (x > maxX) pieceElement.style.left = `${maxX}px`;
+          else pieceElement.style.left = `${x}px`;
 
-          if (y < minY) activePiece.style.top = `${minY}px`;
-          else if (y > maxY) activePiece.style.top = `${maxY}px`;
-          else activePiece.style.top = `${y}px`;
+          if (y < minY) pieceElement.style.top = `${minY}px`;
+          else if (y > maxY) pieceElement.style.top = `${maxY}px`;
+          else pieceElement.style.top = `${y}px`;
         }
       });
 
       node.addEventListener("pointerup", (e) => {
-        if (activePiece) {
+        if (pieceElement) {
           const newX = Math.floor(
             (e.clientX - node.offsetLeft) /
               (node.clientWidth / horizontalAxis.length),
@@ -187,42 +187,48 @@ export function Chessboard({ className, ...props }: Props) {
                 (node.clientHeight / verticalAxis.length),
             ),
           );
-
           // Rearranja as peças
           setPieces(
-            ((activePiece: HTMLElement) => {
-              // Closure de variável fora do escopo
+            ((pieceElement: HTMLElement /* closure */) => {
               return (value) => {
-                let found = false;
-                return value.map((piece) => {
-                  if (!found && piece.x === gridX && piece.y === gridY) {
-                    if (
-                      referee.current.isValidMove(
-                        gridX,
-                        gridY,
-                        newX,
-                        newY,
-                        piece.type,
-                        piece.team,
-                        value,
-                      )
-                    ) {
-                      piece.x = newX;
-                      piece.y = newY;
-                    } else {
-                      activePiece.style.position = "relative";
-                      activePiece.style.removeProperty("top");
-                      activePiece.style.removeProperty("left");
-                    }
-                    found = true;
+                const currentPiece = value.find(
+                  (piece) => piece.x === gridX && piece.y === gridY,
+                );
+                const newMove = newX !== gridX || newY !== gridY;
+                if (
+                  newMove &&
+                  referee.current.isValidMove(
+                    gridX,
+                    gridY,
+                    newX,
+                    newY,
+                    currentPiece!.type,
+                    currentPiece!.team,
+                    value,
+                  )
+                ) {
+                  const result: Piece[] = [];
+                  const targetPiece = value.find(
+                    (piece) => piece.x === newX && piece.y === newY,
+                  );
+                  for (let i = 0; i < value.length; i++) {
+                    if (value[i] === currentPiece)
+                      // atualiza a posição
+                      result.push({ ...value[i], x: newX, y: newY });
+                    else if (value[i] !== targetPiece) result.push(value[i]); // filtro do alvo
                   }
-                  return piece;
-                });
-              };
-            })(activePiece),
-          );
+                  return result;
+                } else {
+                  pieceElement.style.position = "relative";
+                  pieceElement.style.removeProperty("top");
+                  pieceElement.style.removeProperty("left");
 
-          activePiece = undefined;
+                  return value;
+                }
+              };
+            })(pieceElement),
+          );
+          pieceElement = undefined;
         }
       });
     }
