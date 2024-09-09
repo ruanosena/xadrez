@@ -1,140 +1,30 @@
 import { HTMLAttributes, useCallback, useMemo, useRef, useState } from "react";
-import Referee, { cn } from "../lib/utils";
+import { cn, getBoardXPosition, getBoardYPosition } from "../lib/utils";
+import {
+  verticalAxis,
+  horizontalAxis,
+  initialBoardState,
+} from "../lib/constants";
 import { Tile } from "./Tile";
+import { Piece, PieceType, TeamType } from "../types";
+import Referee from "../lib/referee";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {}
 
-export interface Piece {
-  imageSrc: string;
-  x: number;
-  y: number;
-  type: PieceType;
-  team: TeamType;
-}
-
-export enum PieceType {
-  PAWN,
-  BISHOP,
-  KNIGHT,
-  ROOK,
-  QUEEN,
-  KING,
-}
-
-export enum TeamType {
-  OPPONENT,
-  OUR,
-}
-
-const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
-const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
-
 export function Chessboard({ className, ...props }: Props) {
   const referee = useRef(new Referee());
-  const [pieces, setPieces] = useState<Piece[]>(() => {
-    const result = [];
-
-    for (let p = 0; p < 2; p++) {
-      const teamType = p === 0 ? TeamType.OPPONENT : TeamType.OUR;
-      const type = teamType === TeamType.OPPONENT ? "b" : "w";
-      const y = teamType === TeamType.OPPONENT ? 7 : 0;
-      result.push({
-        imageSrc: `./pieces/rook_${type}.png`,
-        x: 0,
-        y,
-        type: PieceType.ROOK,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/rook_${type}.png`,
-        x: 7,
-        y,
-        type: PieceType.ROOK,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/knight_${type}.png`,
-        x: 1,
-        y,
-        type: PieceType.KNIGHT,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/knight_${type}.png`,
-        x: 6,
-        y,
-        type: PieceType.KNIGHT,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/bishop_${type}.png`,
-        x: 2,
-        y,
-        type: PieceType.BISHOP,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/bishop_${type}.png`,
-        x: 5,
-        y,
-        type: PieceType.BISHOP,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/queen_${type}.png`,
-        x: 3,
-        y,
-        type: PieceType.QUEEN,
-        team: teamType,
-      });
-      result.push({
-        imageSrc: `./pieces/king_${type}.png`,
-        x: 4,
-        y,
-        type: PieceType.KING,
-        team: teamType,
-      });
-    }
-
-    for (let i = 0; i < 8; i++)
-      result.push({
-        imageSrc: "./pieces/pawn_b.png",
-        x: i,
-        y: 6,
-        type: PieceType.PAWN,
-        team: TeamType.OPPONENT,
-      });
-
-    for (let i = 0; i < 8; i++)
-      result.push({
-        imageSrc: "./pieces/pawn_w.png",
-        x: i,
-        y: 1,
-        type: PieceType.PAWN,
-        team: TeamType.OUR,
-      });
-
-    return result;
-  });
+  const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
 
   const ref = useCallback((node: HTMLDivElement | null) => {
     if (node !== null) {
-      let pieceElement: HTMLElement | undefined;
-      let gridX: number, gridY: number;
+      let grabElt: HTMLElement | undefined;
+      let grabX: number, grabY: number;
 
       node.addEventListener("pointerdown", (e) => {
         const element = e.target as HTMLElement;
         if (element.dataset["tile"] === "piece") {
-          gridX = Math.floor(
-            (e.clientX - node.offsetLeft) /
-              (node.clientWidth / horizontalAxis.length),
-          );
-          gridY = Math.abs(
-            Math.ceil(
-              (e.clientY - node.offsetTop - node.clientHeight) /
-                (node.clientHeight / verticalAxis.length),
-            ),
-          );
+          grabX = getBoardXPosition(node, e);
+          grabY = getBoardYPosition(node, e);
 
           const x = e.clientX - element.clientWidth / 2;
           const y = e.clientY - element.clientHeight / 2;
@@ -143,92 +33,130 @@ export function Chessboard({ className, ...props }: Props) {
           element.style.left = `${x}px`;
           element.style.top = `${y}px`;
 
-          pieceElement = element;
+          grabElt = element;
         }
       });
 
       node.addEventListener("pointermove", (e) => {
-        if (pieceElement) {
-          const minX = node.offsetLeft - pieceElement.clientWidth * 0.29;
-          const minY = node.offsetTop - pieceElement.clientHeight * 0.19;
+        if (grabElt) {
+          const minX = node.offsetLeft - grabElt.clientWidth * 0.29;
+          const minY = node.offsetTop - grabElt.clientHeight * 0.19;
           const maxX =
             node.offsetLeft +
             node.clientWidth -
-            pieceElement.clientWidth / 2 -
-            pieceElement.clientWidth * 0.29;
+            grabElt.clientWidth / 2 -
+            grabElt.clientWidth * 0.29;
           const maxY =
             node.offsetTop +
             node.clientHeight -
-            pieceElement.clientWidth / 2 -
-            pieceElement.clientHeight * 0.31;
-          const x = e.clientX - pieceElement.clientWidth / 2;
-          const y = e.clientY - pieceElement.clientHeight / 2;
+            grabElt.clientWidth / 2 -
+            grabElt.clientHeight * 0.31;
+          const x = e.clientX - grabElt.clientWidth / 2;
+          const y = e.clientY - grabElt.clientHeight / 2;
 
-          pieceElement.style.position = "absolute";
-          if (x < minX) pieceElement.style.left = `${minX}px`;
-          else if (x > maxX) pieceElement.style.left = `${maxX}px`;
-          else pieceElement.style.left = `${x}px`;
+          grabElt.style.position = "absolute";
+          if (x < minX) grabElt.style.left = `${minX}px`;
+          else if (x > maxX) grabElt.style.left = `${maxX}px`;
+          else grabElt.style.left = `${x}px`;
 
-          if (y < minY) pieceElement.style.top = `${minY}px`;
-          else if (y > maxY) pieceElement.style.top = `${maxY}px`;
-          else pieceElement.style.top = `${y}px`;
+          if (y < minY) grabElt.style.top = `${minY}px`;
+          else if (y > maxY) grabElt.style.top = `${maxY}px`;
+          else grabElt.style.top = `${y}px`;
         }
       });
 
       node.addEventListener("pointerup", (e) => {
-        if (pieceElement) {
-          const newX = Math.floor(
-            (e.clientX - node.offsetLeft) /
-              (node.clientWidth / horizontalAxis.length),
-          );
-          const newY = Math.abs(
-            Math.ceil(
-              (e.clientY - node.offsetTop - node.clientHeight) /
-                (node.clientHeight / verticalAxis.length),
-            ),
-          );
+        if (grabElt) {
+          const newX = getBoardXPosition(node, e);
+          const newY = getBoardYPosition(node, e);
           // Rearranja as peças
           setPieces(
             ((pieceElement: HTMLElement /* closure */) => {
               return (value) => {
                 const currentPiece = value.find(
-                  (piece) => piece.x === gridX && piece.y === gridY,
+                  ({ position: { x, y } }) => x === grabX && y === grabY,
                 );
-                const newMove = newX !== gridX || newY !== gridY;
-                if (
-                  newMove &&
-                  referee.current.isValidMove(
-                    gridX,
-                    gridY,
-                    newX,
-                    newY,
-                    currentPiece!.type,
-                    currentPiece!.team,
-                    value,
-                  )
-                ) {
+                const newMove = newX !== grabX || newY !== grabY;
+                const pawnDirection =
+                  currentPiece!.team === TeamType.OUR ? 1 : -1;
+                const isValidMove = referee.current.isValidMove(
+                  grabX,
+                  grabY,
+                  newX,
+                  newY,
+                  currentPiece!.type,
+                  currentPiece!.team,
+                  value,
+                );
+                const isEnPassantMove = referee.current.isEnPassantMove(
+                  grabX,
+                  grabY,
+                  newX,
+                  newY,
+                  currentPiece!.type,
+                  currentPiece!.team,
+                  value,
+                );
+                if (newMove) {
                   const result: Piece[] = [];
-                  const targetPiece = value.find(
-                    (piece) => piece.x === newX && piece.y === newY,
-                  );
-                  for (let i = 0; i < value.length; i++) {
-                    if (value[i] === currentPiece)
-                      // atualiza a posição
-                      result.push({ ...value[i], x: newX, y: newY });
-                    else if (value[i] !== targetPiece) result.push(value[i]); // filtro do alvo
-                  }
-                  return result;
-                } else {
-                  pieceElement.style.position = "relative";
-                  pieceElement.style.removeProperty("top");
-                  pieceElement.style.removeProperty("left");
 
-                  return value;
+                  if (isEnPassantMove) {
+                    const targetPiece = value.find(
+                      ({ position: { x, y } }) =>
+                        x === newX && y === newY - pawnDirection,
+                    );
+                    for (let piece of value) {
+                      if (piece === currentPiece) {
+                        piece.enPassant = false;
+                        result.push({
+                          ...piece,
+                          position: { x: newX, y: newY },
+                        }); // atualiza a posição
+                      } else if (piece !== targetPiece /* filtro do alvo */) {
+                        if (piece.type === PieceType.PAWN) {
+                          piece.enPassant = false;
+                        }
+                        result.push(piece);
+                      }
+                    }
+                    return result;
+                  } else if (isValidMove) {
+                    const targetPiece = value.find(
+                      ({ position: { x, y } }) => x === newX && y === newY,
+                    );
+                    for (let piece of value) {
+                      if (piece === currentPiece) {
+                        if (
+                          piece.type === PieceType.PAWN &&
+                          Math.abs(grabY - newY) === 2
+                        ) {
+                          piece.enPassant = true;
+                        } else {
+                          piece.enPassant = false;
+                        }
+                        result.push({
+                          ...piece,
+                          position: { x: newX, y: newY },
+                        }); // atualiza a posição
+                      } else if (piece !== targetPiece /* filtro do alvo */) {
+                        if (piece.type === PieceType.PAWN) {
+                          piece.enPassant = false;
+                        }
+                        result.push(piece);
+                      }
+                    }
+                    return result;
+                  }
                 }
+                // executado: se for algum movimento diferente de válido e enpassant
+                pieceElement.style.position = "relative";
+                pieceElement.style.removeProperty("top");
+                pieceElement.style.removeProperty("left");
+                return value;
               };
-            })(pieceElement),
+            })(grabElt),
           );
-          pieceElement = undefined;
+          grabElt = undefined;
         }
       });
     }
@@ -242,9 +170,12 @@ export function Chessboard({ className, ...props }: Props) {
         const number = j + i + 2;
         let image: string | undefined;
 
-        for (const piece of pieces) {
-          if (piece.x === i && piece.y === j) {
-            image = piece.imageSrc;
+        for (const {
+          position: { x, y },
+          imageSrc,
+        } of pieces) {
+          if (x === i && y === j) {
+            image = imageSrc;
             break;
           }
         }
