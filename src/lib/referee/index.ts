@@ -1,4 +1,5 @@
 import { Piece, PieceType, Position, TeamType } from "../../types";
+import { HORIZONTAL_AXIS } from "../constants";
 import { samePosition } from "../utils";
 
 export default class Referee {
@@ -19,6 +20,17 @@ export default class Referee {
         pieceTeam !== team && samePosition(position, tilePosition),
     );
     return !!piece;
+  }
+
+  tileIsEmptyOrOccupiedByOponennt(
+    tilePosition: Position,
+    boardState: Piece[],
+    team: TeamType,
+  ) {
+    return (
+      !this.tileIsOccupied(tilePosition, boardState) ||
+      this.tileIsOccupiedByOponnent(tilePosition, boardState, team)
+    );
   }
 
   isEnPassantMove(
@@ -109,6 +121,112 @@ export default class Referee {
         // cima, ou baixo, a direita
         console.log("cima / baixo direita");
         if (this.tileIsOccupiedByOponnent(newPosition, boardState, pieceTeam)) {
+          return true;
+        }
+      }
+    } else if (pieceType === PieceType.KNIGHT) {
+      console.log("cavaleiro");
+      for (let i = -1; i < 2; i += 2) {
+        for (let j = -1; j < 2; j += 2) {
+          // cima ou em baixo
+          if (newPosition.y - piecePosition.y === 2 * i) {
+            if (newPosition.x - piecePosition.x === j) {
+              if (
+                this.tileIsEmptyOrOccupiedByOponennt(
+                  newPosition,
+                  boardState,
+                  pieceTeam,
+                )
+              ) {
+                console.log("cima/baixo esquerda/direita");
+                return true;
+              }
+            }
+          }
+          // direita ou na esquerda
+          if (newPosition.x - piecePosition.x === 2 * i) {
+            if (newPosition.y - piecePosition.y === j) {
+              if (
+                this.tileIsEmptyOrOccupiedByOponennt(
+                  newPosition,
+                  boardState,
+                  pieceTeam,
+                )
+              ) {
+                console.log("direita/esquerda cima/baixo");
+                return true;
+              }
+            }
+          }
+        }
+      }
+    } else if (pieceType === PieceType.BISHOP) {
+      for (let i = 1, tilePassed: Position; i < HORIZONTAL_AXIS.length; i++) {
+        // cima direita
+        if (
+          newPosition.x > piecePosition.x &&
+          newPosition.y > piecePosition.y
+        ) {
+          console.log("^ >");
+          tilePassed = { x: piecePosition.x + i, y: piecePosition.y + i };
+          if (this.tileIsOccupied(tilePassed, boardState)) break;
+        }
+
+        if (
+          newPosition.x - piecePosition.x === i &&
+          newPosition.y - piecePosition.y === i
+        ) {
+          return true;
+        }
+
+        // cima esquerda
+        if (
+          newPosition.x < piecePosition.x &&
+          newPosition.y > piecePosition.y
+        ) {
+          console.log("^ <");
+          tilePassed = { x: piecePosition.x - i, y: piecePosition.y + i };
+          if (this.tileIsOccupied(tilePassed, boardState)) break;
+        }
+
+        if (
+          newPosition.x - piecePosition.x === -i &&
+          newPosition.y - piecePosition.y === i
+        ) {
+          return true;
+        }
+
+        // baixo direita
+        if (
+          newPosition.x > piecePosition.x &&
+          newPosition.y < piecePosition.y
+        ) {
+          console.log("v >");
+          tilePassed = { x: piecePosition.x + i, y: piecePosition.y - i };
+          if (this.tileIsOccupied(tilePassed, boardState)) break;
+        }
+
+        if (
+          newPosition.x - piecePosition.x === i &&
+          newPosition.y - piecePosition.y === -i
+        ) {
+          return true;
+        }
+
+        // baixo esquerda
+        if (
+          newPosition.x < piecePosition.x &&
+          newPosition.y < piecePosition.y
+        ) {
+          console.log("v <");
+          tilePassed = { x: piecePosition.x - i, y: piecePosition.y - i };
+          if (this.tileIsOccupied(tilePassed, boardState)) break;
+        }
+
+        if (
+          newPosition.x - piecePosition.x === -i &&
+          newPosition.y - piecePosition.y === -i
+        ) {
           return true;
         }
       }

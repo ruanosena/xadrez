@@ -10,7 +10,7 @@ export function Tile({ number, className, imageSrc, ...props }: Props) {
     <div
       {...(!imageSrc && { "data-tile": "blank" })}
       className={cn(
-        number % 2 === 0 ? "bg-white" : "bg-[#6a9560]",
+        number % 2 === 0 ? "bg-[#6a9560]" : "bg-white",
         { "size-[100px]": !imageSrc },
         className,
       )}
