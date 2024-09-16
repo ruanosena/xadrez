@@ -1,17 +1,6 @@
 import { HTMLAttributes, useCallback, useMemo, useRef, useState } from "react";
-import {
-  cn,
-  getBoardDelimeters,
-  getBoardXPosition,
-  getBoardYPosition,
-  samePosition,
-} from "../lib/utils";
-import {
-  VERTICAL_AXIS,
-  HORIZONTAL_AXIS,
-  INITIAL_BOARD_STATE,
-  GRID_SQUARE_SIZE,
-} from "../lib/constants";
+import { cn, getBoardDelimeters, getBoardXPosition, getBoardYPosition, samePosition } from "../lib/utils";
+import { VERTICAL_AXIS, HORIZONTAL_AXIS, INITIAL_BOARD_STATE, GRID_SQUARE_SIZE } from "../lib/constants";
 import { Tile } from "./Tile";
 import { Piece, PieceType, Position, TeamType } from "../types";
 import Referee from "../lib/referee";
@@ -71,12 +60,9 @@ export function Chessboard({ className, ...props }: Props) {
           setPieces(
             ((pieceElement: HTMLElement /* closure */) => {
               return (value) => {
-                const grabPiece = value.find(({ position }) =>
-                  samePosition(position, grabPosition),
-                );
+                const grabPiece = value.find(({ position }) => samePosition(position, grabPosition));
                 const newMove = !samePosition(newPosition, grabPosition);
-                const pawnDirection =
-                  grabPiece!.team === TeamType.OUR ? 1 : -1;
+                const pawnDirection = grabPiece!.team === TeamType.OUR ? 1 : -1;
                 const isValidMove = referee.current.isValidMove(
                   grabPosition,
                   newPosition,
@@ -91,7 +77,7 @@ export function Chessboard({ className, ...props }: Props) {
                   grabPiece!.team,
                   value,
                 );
-                if (newMove) {
+                if (newMove /* Critério prévio */) {
                   const result: Piece[] = [];
 
                   if (isEnPassantMove) {
@@ -114,15 +100,12 @@ export function Chessboard({ className, ...props }: Props) {
                     }
                     return result;
                   } else if (isValidMove) {
-                    const targetPiece = value.find(({ position }) =>
-                      samePosition(position, newPosition),
-                    );
+                    const targetPiece = value.find(({ position }) => samePosition(position, newPosition));
                     for (let piece of value) {
                       if (piece === grabPiece) {
                         // movimento especial
                         piece.enPassant =
-                          piece.type === PieceType.PAWN &&
-                          Math.abs(grabPosition.y - newPosition.y) === 2;
+                          piece.type === PieceType.PAWN && Math.abs(grabPosition.y - newPosition.y) === 2;
                         result.push({ ...piece, position: newPosition }); // atualiza a posição
                       } else if (piece !== targetPiece /* filtro do alvo */) {
                         if (piece.type === PieceType.PAWN) {
@@ -154,13 +137,9 @@ export function Chessboard({ className, ...props }: Props) {
     for (let j = VERTICAL_AXIS.length - 1; j >= 0; j--) {
       for (let i = 0; i < HORIZONTAL_AXIS.length; i++) {
         const number = j + i + 2;
-        const piece = pieces.find(
-          ({ position }) => samePosition(position, {x: i, y: j}),
-        );
+        const piece = pieces.find(({ position }) => samePosition(position, { x: i, y: j }));
 
-        result.push(
-          <Tile key={`${i},${j}`} number={number} imageSrc={piece?.imageSrc} />,
-        );
+        result.push(<Tile key={`${i},${j}`} number={number} imageSrc={piece?.imageSrc} />);
       }
     }
     return result;
@@ -173,7 +152,7 @@ export function Chessboard({ className, ...props }: Props) {
         width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`,
         height: `${GRID_SQUARE_SIZE * VERTICAL_AXIS.length}px`,
       }}
-      className={cn("grid grid-cols-8 grid-rows-8 bg-blue-600 select-none", className)}
+      className={cn("grid select-none grid-cols-8 grid-rows-8 bg-blue-600", className)}
       {...props}
     >
       {board}
