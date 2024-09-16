@@ -24,3 +24,10 @@ export interface Piece {
   team: TeamType;
   enPassant?: boolean;
 }
+
+export type Movement = (
+  piecePosition: Position,
+  newPosition: Position,
+  pieceTeam: TeamType,
+  boardState: Piece[],
+) => boolean;

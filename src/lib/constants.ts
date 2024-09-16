@@ -8,7 +8,7 @@ export const INITIAL_BOARD_STATE: Piece[] = [
   // PRETOS
   {
     imageSrc: `./pieces/rook_b.png`,
-    position: { x: 0, y: 7 },
+    position: { x: 3, y: 4 },
     type: PieceType.ROOK,
     team: TeamType.OPPONENT,
   },

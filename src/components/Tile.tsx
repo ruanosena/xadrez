@@ -12,6 +12,7 @@ export function Tile({ number, className, imageSrc, ...props }: Props) {
       className={cn(
         number % 2 === 0 ? "bg-[#6a9560]" : "bg-white",
         { "size-[100px]": !imageSrc },
+        "select-none",
         className,
       )}
       {...props}

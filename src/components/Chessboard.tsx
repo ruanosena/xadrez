@@ -173,7 +173,7 @@ export function Chessboard({ className, ...props }: Props) {
         width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`,
         height: `${GRID_SQUARE_SIZE * VERTICAL_AXIS.length}px`,
       }}
-      className={cn("grid grid-cols-8 grid-rows-8 bg-blue-600", className)}
+      className={cn("grid grid-cols-8 grid-rows-8 bg-blue-600 select-none", className)}
       {...props}
     >
       {board}
