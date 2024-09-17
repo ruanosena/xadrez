@@ -50,7 +50,7 @@ export const INITIAL_BOARD_STATE: Piece[] = [
   },
   {
     imageSrc: `./pieces/king_b.png`,
-    position: { x: 4, y: 4 },
+    position: { x: 4, y: 7 },
     type: PieceType.KING,
     team: TeamType.OPPONENT,
   },
