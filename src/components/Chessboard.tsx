@@ -1,4 +1,4 @@
-import { HTMLAttributes, useCallback, useMemo, useRef, useState } from "react";
+import { Fragment, HTMLAttributes, useCallback, useMemo, useRef, useState } from "react";
 import { cn, getBoardDelimeters, getBoardXPosition, getBoardYPosition, samePosition } from "../lib/utils";
 import { VERTICAL_AXIS, HORIZONTAL_AXIS, INITIAL_BOARD_STATE, GRID_SQUARE_SIZE } from "../lib/constants";
 import { Tile } from "./Tile";
@@ -10,6 +10,7 @@ interface Props extends HTMLAttributes<HTMLDivElement> {}
 export function Chessboard({ className, ...props }: Props) {
   const referee = useRef(new Referee());
   const [pieces, setPieces] = useState<Piece[]>(INITIAL_BOARD_STATE);
+  const [promotionPawn, setPromotionPawn] = useState<Piece | null>(null);
 
   const ref = useCallback((node: HTMLDivElement | null) => {
     if (node !== null) {
@@ -106,7 +107,14 @@ export function Chessboard({ className, ...props }: Props) {
                         // movimento especial
                         piece.enPassant =
                           piece.type === PieceType.PAWN && Math.abs(grabPosition.y - newPosition.y) === 2;
-                        result.push({ ...piece, position: newPosition }); // atualiza a posição
+                        // atualiza a posição em novo objeto
+                        const pieceUpdated = { ...piece, position: newPosition };
+                        result.push(pieceUpdated);
+                        if (pieceUpdated.type === PieceType.PAWN) {
+                          // checa se é promoção pro peão
+                          const promotionLine = piece.team === TeamType.OUR ? 7 : 0;
+                          if (newPosition.y === promotionLine) setPromotionPawn(pieceUpdated);
+                        }
                       } else if (piece !== targetPiece /* filtro do alvo */) {
                         if (piece.type === PieceType.PAWN) {
                           piece.enPassant = false;
@@ -145,17 +153,93 @@ export function Chessboard({ className, ...props }: Props) {
     return result;
   }, [pieces]);
 
+  const promotePawn = useCallback(
+    (newPieceType: PieceType) => {
+      setPieces((pieces) =>
+        pieces.map((piece) => {
+          if (samePosition(promotionPawn!.position, piece.position)) {
+            piece.type = newPieceType;
+            piece.imageSrc = INITIAL_BOARD_STATE.find(
+              (initialPieceState) => initialPieceState.team === piece.team && initialPieceState.type === piece.type,
+            )!.imageSrc;
+          }
+          return piece;
+        }),
+      );
+      setPromotionPawn(null);
+    },
+    [promotionPawn],
+  );
+
+  const promotionTeamType = useMemo(() => {
+    if (!promotionPawn) return [];
+    return promotionPawn.team === TeamType.OUR ? ["w", "White"] : ["b", "Black"];
+  }, [promotionPawn]);
+
   return (
-    <div
-      ref={ref}
-      style={{
-        width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`,
-        height: `${GRID_SQUARE_SIZE * VERTICAL_AXIS.length}px`,
-      }}
-      className={cn("grid select-none grid-cols-8 grid-rows-8 bg-blue-600", className)}
-      {...props}
-    >
-      {board}
-    </div>
+    <Fragment>
+      {/* Modal de promoção da peça peão - Backdrop */}
+      {promotionPawn && (
+        <div className="absolute inset-0">
+          {/* Modal */}
+          <div
+            style={{ width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`, height: `${GRID_SQUARE_SIZE * 3.5}px` }}
+            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-around bg-gray-600/70"
+          >
+            <div
+              className="cursor-pointer rounded-full p-4 hover:bg-white/25"
+              onClick={() => promotePawn(PieceType.BISHOP)}
+            >
+              <img
+                className="w-32 select-none"
+                src={`/pieces/bishop_${promotionTeamType[0]}.png`}
+                alt={`${promotionTeamType[1]} Bishop`}
+              />
+            </div>
+            <div
+              className="cursor-pointer rounded-full p-4 hover:bg-white/25"
+              onClick={() => promotePawn(PieceType.KNIGHT)}
+            >
+              <img
+                className="w-32 select-none"
+                src={`/pieces/knight_${promotionTeamType[0]}.png`}
+                alt={`${promotionTeamType[1]} Knight`}
+              />
+            </div>
+            <div
+              className="cursor-pointer rounded-full p-4 hover:bg-white/25"
+              onClick={() => promotePawn(PieceType.ROOK)}
+            >
+              <img
+                className="w-32 select-none"
+                src={`/pieces/rook_${promotionTeamType[0]}.png`}
+                alt={`${promotionTeamType[1]} Rook`}
+              />
+            </div>
+            <div
+              className="cursor-pointer rounded-full p-4 hover:bg-white/25"
+              onClick={() => promotePawn(PieceType.QUEEN)}
+            >
+              <img
+                className="w-32 select-none"
+                src={`/pieces/queen_${promotionTeamType[0]}.png`}
+                alt={`${promotionTeamType[1]} Queen`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      <div
+        ref={ref}
+        style={{
+          width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`,
+          height: `${GRID_SQUARE_SIZE * VERTICAL_AXIS.length}px`,
+        }}
+        className={cn("grid select-none grid-cols-8 grid-rows-8 bg-blue-600", className)}
+        {...props}
+      >
+        {board}
+      </div>
+    </Fragment>
   );
 }
