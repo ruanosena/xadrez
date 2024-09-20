@@ -23,6 +23,7 @@ export interface Piece {
   type: PieceType;
   team: TeamType;
   enPassant?: boolean;
+  allowedMoves?: Position[];
 }
 
 export type Movement = (

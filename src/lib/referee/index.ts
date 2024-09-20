@@ -1,5 +1,5 @@
 import { Movement, Piece, PieceType, Position, TeamType } from "../../types";
-import { bishopMove, kingMove, knightMove, pawnMove, queenMove, rookMove } from "./rules";
+import { bishopMove, getAllowedPawnMoves, kingMove, knightMove, pawnMove, queenMove, rookMove } from "./rules";
 
 export default class Referee {
   dict: Record<PieceType, Movement>;
@@ -20,7 +20,7 @@ export default class Referee {
     pieceType: PieceType,
     pieceTeam: TeamType,
     boardState: Piece[],
-  ) {
+  ): boolean {
     const pawnDirection = pieceTeam === TeamType.OUR ? 1 : -1;
 
     if (pieceType === PieceType.PAWN) {
@@ -40,7 +40,6 @@ export default class Referee {
   }
 
   /* TODO:
-    pawn promoção
     coibir jogada perigosa do rei
     add castelamento
     add checkmate!
@@ -53,7 +52,16 @@ export default class Referee {
     pieceType: PieceType,
     pieceTeam: TeamType,
     boardState: Piece[],
-  ) {
+  ): boolean {
     return this.dict[pieceType](piecePosition, newPosition, pieceTeam, boardState);
+  }
+
+  getValidMoves(piece: Piece, boardState: Piece[]): Position[] {
+    switch (piece.type) {
+      case PieceType.PAWN:
+        return getAllowedPawnMoves(piece, boardState);
+      default:
+        return [];
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Movement, TeamType } from "../../../types";
+import { Movement, Piece, Position, TeamType } from "../../../types";
 import { tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
 
 export const pawnMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {
@@ -38,4 +38,24 @@ export const pawnMove: Movement = (piecePosition, newPosition, pieceTeam, boardS
   }
 
   return false;
+};
+
+export const getAllowedPawnMoves = (pawn: Piece, boardState: Piece[]): Position[] => {
+  const moves: Position[] = [];
+
+  const specialRow = pawn.team === TeamType.OUR ? 1 : 6;
+  const pawnDirection = pawn.team === TeamType.OUR ? 1 : -1;
+
+  if (!tileIsOccupied({ x: pawn.position.x, y: pawn.position.y + pawnDirection }, boardState)) {
+    moves.push({ x: pawn.position.x, y: pawn.position.y + pawnDirection });
+
+    if (
+      pawn.position.y === specialRow &&
+      !tileIsOccupied({ x: pawn.position.x, y: pawn.position.y + pawnDirection * 2 }, boardState)
+    ) {
+      moves.push({ x: pawn.position.x, y: pawn.position.y + pawnDirection * 2 });
+    }
+  }
+
+  return moves;
 };
