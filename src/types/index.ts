@@ -32,3 +32,5 @@ export type Movement = (
   pieceTeam: TeamType,
   boardState: Piece[],
 ) => boolean;
+
+export type AllowedMovement = (piece: Piece, boardState: Piece[]) => Position[];

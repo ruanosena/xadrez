@@ -1,4 +1,5 @@
-import { Movement, Piece, Position, TeamType } from "../../../types";
+import { AllowedMovement, Movement, Piece, Position, TeamType } from "../../../types";
+import { samePosition } from "../../utils";
 import { tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
 
 export const pawnMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {
@@ -40,20 +41,42 @@ export const pawnMove: Movement = (piecePosition, newPosition, pieceTeam, boardS
   return false;
 };
 
-export const getAllowedPawnMoves = (pawn: Piece, boardState: Piece[]): Position[] => {
+export const getAllowedPawnMoves: AllowedMovement = (pawn: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
 
   const specialRow = pawn.team === TeamType.OUR ? 1 : 6;
   const pawnDirection = pawn.team === TeamType.OUR ? 1 : -1;
 
-  if (!tileIsOccupied({ x: pawn.position.x, y: pawn.position.y + pawnDirection }, boardState)) {
-    moves.push({ x: pawn.position.x, y: pawn.position.y + pawnDirection });
+  const normalMove: Position = { x: pawn.position.x, y: pawn.position.y + pawnDirection };
+  const specialMove: Position = { x: pawn.position.x, y: pawn.position.y + pawnDirection * 2 };
+  const upperLeftAttack: Position = { x: pawn.position.x - 1, y: pawn.position.y + pawnDirection };
+  const upperRightAttack: Position = { x: pawn.position.x + 1, y: pawn.position.y + pawnDirection };
+  const leftPosition: Position = { x: pawn.position.x - 1, y: pawn.position.y };
+  const rightPosition: Position = { x: pawn.position.x + 1, y: pawn.position.y };
 
-    if (
-      pawn.position.y === specialRow &&
-      !tileIsOccupied({ x: pawn.position.x, y: pawn.position.y + pawnDirection * 2 }, boardState)
-    ) {
-      moves.push({ x: pawn.position.x, y: pawn.position.y + pawnDirection * 2 });
+  if (!tileIsOccupied(normalMove, boardState)) {
+    moves.push(normalMove);
+
+    if (pawn.position.y === specialRow && !tileIsOccupied(specialMove, boardState)) {
+      moves.push(specialMove);
+    }
+  }
+
+  if (tileIsOccupiedByOponnent(upperLeftAttack, boardState, pawn.team)) {
+    moves.push(upperLeftAttack);
+  } else if (!tileIsOccupied(upperLeftAttack, boardState)) {
+    const leftPiece = boardState.find((piece) => samePosition(piece.position, leftPosition));
+    if (leftPiece?.enPassant) {
+      moves.push(upperLeftAttack);
+    }
+  }
+
+  if (tileIsOccupiedByOponnent(upperRightAttack, boardState, pawn.team)) {
+    moves.push(upperRightAttack);
+  } else if (!tileIsOccupied(upperRightAttack, boardState)) {
+    const rightPiece = boardState.find((piece) => samePosition(piece.position, rightPosition));
+    if (rightPiece?.enPassant) {
+      moves.push(upperRightAttack);
     }
   }
 

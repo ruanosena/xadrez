@@ -7,6 +7,7 @@ import Referee from "../lib/referee";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {}
 
+// FIXME: definir grab valores dentro do componente
 let grabElt: HTMLElement | undefined;
 const grabPosition = {} as Position;
 

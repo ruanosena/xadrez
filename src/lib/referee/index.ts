@@ -1,16 +1,38 @@
-import { Movement, Piece, PieceType, Position, TeamType } from "../../types";
-import { bishopMove, getAllowedPawnMoves, kingMove, knightMove, pawnMove, queenMove, rookMove } from "./rules";
+import { AllowedMovement, Movement, Piece, PieceType, Position, TeamType } from "../../types";
+import {
+  bishopMove,
+  getAllowedPawnMoves,
+  getAllowedKnightMoves,
+  kingMove,
+  knightMove,
+  pawnMove,
+  queenMove,
+  rookMove,
+  getAllowedBishopMoves,
+  getAllowedRookMoves,
+  getAllowedQueenMoves,
+  getAllowedKingMoves,
+} from "./rules";
 
 export default class Referee {
-  dict: Record<PieceType, Movement>;
+  MovementDict: Record<PieceType, Movement>;
+  GetAllowedDict: Record<PieceType, AllowedMovement>;
   constructor() {
-    this.dict = {
+    this.MovementDict = {
       [PieceType.PAWN]: pawnMove,
       [PieceType.KNIGHT]: knightMove,
       [PieceType.BISHOP]: bishopMove,
       [PieceType.ROOK]: rookMove,
       [PieceType.QUEEN]: queenMove,
       [PieceType.KING]: kingMove,
+    };
+    this.GetAllowedDict = {
+      [PieceType.PAWN]: getAllowedPawnMoves,
+      [PieceType.KNIGHT]: getAllowedKnightMoves,
+      [PieceType.BISHOP]: getAllowedBishopMoves,
+      [PieceType.ROOK]: getAllowedRookMoves,
+      [PieceType.QUEEN]: getAllowedQueenMoves,
+      [PieceType.KING]: getAllowedKingMoves,
     };
   }
 
@@ -53,15 +75,10 @@ export default class Referee {
     pieceTeam: TeamType,
     boardState: Piece[],
   ): boolean {
-    return this.dict[pieceType](piecePosition, newPosition, pieceTeam, boardState);
+    return this.MovementDict[pieceType](piecePosition, newPosition, pieceTeam, boardState);
   }
 
   getValidMoves(piece: Piece, boardState: Piece[]): Position[] {
-    switch (piece.type) {
-      case PieceType.PAWN:
-        return getAllowedPawnMoves(piece, boardState);
-      default:
-        return [];
-    }
+    return this.GetAllowedDict[piece.type](piece, boardState);
   }
 }

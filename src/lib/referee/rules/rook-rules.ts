@@ -1,5 +1,5 @@
-import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied } from "./general-rules";
-import { Movement, Position } from "../../../types";
+import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
+import { AllowedMovement, Movement, Piece, Position } from "../../../types";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../constants";
 import { samePosition } from "../../utils";
 
@@ -29,4 +29,67 @@ export const rookMove: Movement = (piecePosition, newPosition, pieceTeam, boardS
     }
   }
   return false;
+};
+
+export const getAllowedRookMoves: AllowedMovement = (rook: Piece, boardState: Piece[]) => {
+  const moves: Position[] = [];
+
+  // De cima
+  for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+    destination = { x: rook.position.x, y: rook.position.y - i };
+
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, rook.team)) {
+      moves.push(destination);
+      break;
+    } else {
+      // ocupado por peça do time
+      break;
+    }
+  }
+  // De baixo
+  for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+    destination = { x: rook.position.x, y: rook.position.y + i };
+
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, rook.team)) {
+      moves.push(destination);
+      break;
+    } else {
+      // ocupado por peça do time
+      break;
+    }
+  }
+  // Da esquerda
+  for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+    destination = { x: rook.position.x - i, y: rook.position.y };
+
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, rook.team)) {
+      moves.push(destination);
+      break;
+    } else {
+      // ocupado por peça do time
+      break;
+    }
+  }
+  // Da direita
+  for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+    destination = { x: rook.position.x + i, y: rook.position.y };
+
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, rook.team)) {
+      moves.push(destination);
+      break;
+    } else {
+      // ocupado por peça do time
+      break;
+    }
+  }
+
+  return moves;
 };
