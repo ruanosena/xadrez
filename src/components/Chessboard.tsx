@@ -5,14 +5,15 @@ import { Tile } from "./Tile";
 import { Piece, PieceType, Position, TeamType } from "../types";
 import Referee from "../lib/referee";
 
-interface Props extends HTMLAttributes<HTMLDivElement> {}
+interface Props extends HTMLAttributes<HTMLDivElement> {
+  getAllowedMoves?: () => Position[];
+  playMove?: () => void;
+}
 
-// FIXME: definir grab valores dentro do componente
-let grabElt: HTMLElement | undefined;
-const grabPosition = {} as Position;
-
-export function Chessboard({ className, ...props }: Props) {
+export function Chessboard({ getAllowedMoves, playMove, className, ...props }: Props) {
   const referee = useRef(new Referee());
+  const grabElt = useRef<HTMLElement>();
+  const grabPosition = useRef({} as Position);
   const [pieces, setPieces] = useState<Piece[]>(INITIAL_BOARD_STATE);
   const [promotionPawn, setPromotionPawn] = useState<Piece | null>(null);
 
@@ -34,8 +35,8 @@ export function Chessboard({ className, ...props }: Props) {
 
           const element = e.target as HTMLElement;
           if (element.dataset["tile"] === "piece") {
-            grabPosition.x = getBoardXPosition(node, e);
-            grabPosition.y = getBoardYPosition(node, e);
+            grabPosition.current.x = getBoardXPosition(node, e);
+            grabPosition.current.y = getBoardYPosition(node, e);
 
             const x = e.clientX - GRID_SQUARE_SIZE / 2;
             const y = e.clientY - GRID_SQUARE_SIZE / 2;
@@ -44,49 +45,49 @@ export function Chessboard({ className, ...props }: Props) {
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
 
-            grabElt = element;
+            grabElt.current = element;
           }
         });
 
         node.addEventListener("pointermove", (e) => {
-          if (grabElt) {
+          if (grabElt.current) {
             const { maxX, maxY, minX, minY } = getBoardDelimeters(node);
             const x = e.clientX - GRID_SQUARE_SIZE / 2;
             const y = e.clientY - GRID_SQUARE_SIZE / 2;
 
-            grabElt.style.position = "absolute";
-            if (x < minX) grabElt.style.left = `${minX}px`;
-            else if (x > maxX) grabElt.style.left = `${maxX}px`;
-            else grabElt.style.left = `${x}px`;
+            grabElt.current.style.position = "absolute";
+            if (x < minX) grabElt.current.style.left = `${minX}px`;
+            else if (x > maxX) grabElt.current.style.left = `${maxX}px`;
+            else grabElt.current.style.left = `${x}px`;
 
-            if (y < minY) grabElt.style.top = `${minY}px`;
-            else if (y > maxY) grabElt.style.top = `${maxY}px`;
-            else grabElt.style.top = `${y}px`;
+            if (y < minY) grabElt.current.style.top = `${minY}px`;
+            else if (y > maxY) grabElt.current.style.top = `${maxY}px`;
+            else grabElt.current.style.top = `${y}px`;
           }
         });
 
         node.addEventListener("pointerup", (e) => {
-          if (grabElt) {
+          if (grabElt.current) {
             const newPosition: Position = {
               x: getBoardXPosition(node, e),
               y: getBoardYPosition(node, e),
             };
             // Rearranja as peças
             setPieces(
-              ((pieceElement: HTMLElement /* closure */) => {
+              ((pieceElement: HTMLElement /* closure para setState sempre acessar varíavel fora do escopo */) => {
                 return (value) => {
-                  const grabPiece = value.find(({ position }) => samePosition(position, grabPosition));
-                  const newMove = !samePosition(newPosition, grabPosition);
+                  const grabPiece = value.find(({ position }) => samePosition(position, grabPosition.current));
+                  const newMove = !samePosition(newPosition, grabPosition.current);
                   const pawnDirection = grabPiece!.team === TeamType.OUR ? 1 : -1;
                   const isValidMove = referee.current.isValidMove(
-                    grabPosition,
+                    grabPosition.current,
                     newPosition,
                     grabPiece!.type,
                     grabPiece!.team,
                     value,
                   );
                   const isEnPassantMove = referee.current.isEnPassantMove(
-                    grabPosition,
+                    grabPosition.current,
                     newPosition,
                     grabPiece!.type,
                     grabPiece!.team,
@@ -120,7 +121,7 @@ export function Chessboard({ className, ...props }: Props) {
                         if (piece === grabPiece) {
                           // movimento especial
                           piece.enPassant =
-                            piece.type === PieceType.PAWN && Math.abs(grabPosition.y - newPosition.y) === 2;
+                            piece.type === PieceType.PAWN && Math.abs(grabPosition.current.y - newPosition.y) === 2;
                           // atualiza a posição em novo objeto
                           const pieceUpdated = { ...piece, position: newPosition };
                           result.push(pieceUpdated);
@@ -139,15 +140,15 @@ export function Chessboard({ className, ...props }: Props) {
                       return result;
                     }
                   }
-                  // executado: se for algum movimento diferente de válido e enpassant
-                  pieceElement.style.position = "relative";
+                  // executado: se for algum movimento diferente de válido e enpassant, ex, no mesmo Tile
+                  pieceElement.style.setProperty("position", "relative");
                   pieceElement.style.removeProperty("top");
                   pieceElement.style.removeProperty("left");
                   return value;
                 };
-              })(grabElt),
+              })(grabElt.current),
             );
-            grabElt = undefined;
+            grabElt.current = undefined;
           }
         });
       }
@@ -164,7 +165,8 @@ export function Chessboard({ className, ...props }: Props) {
         const piece = pieces.find(({ position }) => samePosition(position, { x: i, y: j }));
 
         // Ao atualizar o tabuleiro checa se na peça atual há movimento permitido no "Tile" renderizado
-        const currentPiece = grabElt && pieces.find((piece) => samePosition(piece.position, grabPosition));
+        const currentPiece =
+          grabElt.current && pieces.find((piece) => samePosition(piece.position, grabPosition.current));
         const highlight = currentPiece?.allowedMoves
           ? currentPiece.allowedMoves.some((position) => samePosition(position, { x: i, y: j }))
           : false;
