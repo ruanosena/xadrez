@@ -1,28 +1,28 @@
 import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
-import { AllowedMovement, Movement, Piece, Position } from "../../types";
+import { AllowedMovement, Movement } from "../../types";
+import { Piece, Position } from "../../models";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../constants";
-import { samePosition } from "../utils";
 
-export const rookMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {
+export const rookMove: Movement = (origin, destination, pieceTeam, boardState) => {
   // Torre
-  if (newPosition.x === piecePosition.x) {
+  if (destination.x === origin.x) {
     for (let i = 1, passedTile: Position, multiplier: number; i < VERTICAL_AXIS.length; i++) {
-      multiplier = newPosition.y > piecePosition.y ? 1 : -1;
-      passedTile = { x: piecePosition.x, y: piecePosition.y + i * multiplier };
+      multiplier = destination.y > origin.y ? 1 : -1;
+      passedTile = new Position(origin.x, origin.y + i * multiplier);
 
-      if (samePosition(passedTile, newPosition)) {
-        if (tileIsEmptyOrOccupiedByOponennt(newPosition, boardState, pieceTeam)) return true;
+      if (destination.samePosition(passedTile)) {
+        if (tileIsEmptyOrOccupiedByOponennt(destination, boardState, pieceTeam)) return true;
       } else {
         if (tileIsOccupied(passedTile, boardState)) break;
       }
     }
   }
-  if (newPosition.y === piecePosition.y) {
+  if (destination.y === origin.y) {
     for (let i = 1, passedTile: Position, multiplier: number; i < HORIZONTAL_AXIS.length; i++) {
-      multiplier = newPosition.x > piecePosition.x ? 1 : -1;
-      passedTile = { x: piecePosition.x + i * multiplier, y: piecePosition.y };
-      if (samePosition(passedTile, newPosition)) {
-        if (tileIsEmptyOrOccupiedByOponennt(newPosition, boardState, pieceTeam)) return true;
+      multiplier = destination.x > origin.x ? 1 : -1;
+      passedTile = new Position(origin.x + i * multiplier, origin.y);
+      if (destination.samePosition(passedTile)) {
+        if (tileIsEmptyOrOccupiedByOponennt(destination, boardState, pieceTeam)) return true;
       } else {
         if (tileIsOccupied(passedTile, boardState)) break;
       }
@@ -36,7 +36,7 @@ export const getAllowedRookMoves: AllowedMovement = (rook: Piece, boardState: Pi
 
   // De cima
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: rook.position.x, y: rook.position.y - i };
+    destination = new Position(rook.position.x, rook.position.y - i);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);
@@ -50,7 +50,7 @@ export const getAllowedRookMoves: AllowedMovement = (rook: Piece, boardState: Pi
   }
   // De baixo
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: rook.position.x, y: rook.position.y + i };
+    destination = new Position(rook.position.x, rook.position.y + i);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);
@@ -64,7 +64,7 @@ export const getAllowedRookMoves: AllowedMovement = (rook: Piece, boardState: Pi
   }
   // Da esquerda
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: rook.position.x - i, y: rook.position.y };
+    destination = new Position(rook.position.x - i, rook.position.y);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);
@@ -78,7 +78,7 @@ export const getAllowedRookMoves: AllowedMovement = (rook: Piece, boardState: Pi
   }
   // Da direita
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: rook.position.x + i, y: rook.position.y };
+    destination = new Position(rook.position.x + i, rook.position.y);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);

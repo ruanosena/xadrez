@@ -1,17 +1,17 @@
-import { AllowedMovement, Movement, Piece, Position } from "../../types";
+import { Piece, Position } from "../../models";
+import { AllowedMovement, Movement } from "../../types";
 import { HORIZONTAL_AXIS } from "../constants";
-import { samePosition } from "../utils";
 import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
 
-export const bishopMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {
+export const bishopMove: Movement = (origin, destination, pieceTeam, boardState) => {
   // Bispo
   for (let i = 1, passedTile: Position; i < HORIZONTAL_AXIS.length; i++) {
-    passedTile = {
-      x: newPosition.x > piecePosition.x ? piecePosition.x + i : piecePosition.x - i,
-      y: newPosition.y > piecePosition.y ? piecePosition.y + i : piecePosition.y - i,
-    };
+    passedTile = new Position(
+      destination.x > origin.x ? origin.x + i : origin.x - i,
+      destination.y > origin.y ? origin.y + i : origin.y - i,
+    );
 
-    if (samePosition(passedTile, newPosition)) {
+    if (destination.samePosition(passedTile)) {
       // peça alvo na posição final
       if (tileIsEmptyOrOccupiedByOponennt(passedTile, boardState, pieceTeam)) {
         return true;
@@ -29,7 +29,7 @@ export const getAllowedBishopMoves: AllowedMovement = (bishop: Piece, boardState
 
   // Cima e direita
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: bishop.position.x + i, y: bishop.position.y + i };
+    destination = new Position(bishop.position.x + i, bishop.position.y + i);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);
@@ -43,7 +43,7 @@ export const getAllowedBishopMoves: AllowedMovement = (bishop: Piece, boardState
   }
   // Baixo e direita
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: bishop.position.x + i, y: bishop.position.y - i };
+    destination = new Position(bishop.position.x + i, bishop.position.y - i);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);
@@ -57,7 +57,7 @@ export const getAllowedBishopMoves: AllowedMovement = (bishop: Piece, boardState
   }
   // Baixo e esquerda
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: bishop.position.x - i, y: bishop.position.y - i };
+    destination = new Position(bishop.position.x - i, bishop.position.y - i);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);
@@ -71,7 +71,7 @@ export const getAllowedBishopMoves: AllowedMovement = (bishop: Piece, boardState
   }
   // Cima e esquerda
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
-    destination = { x: bishop.position.x - i, y: bishop.position.y + i };
+    destination = new Position(bishop.position.x - i, bishop.position.y + i);
 
     if (!tileIsOccupied(destination, boardState)) {
       moves.push(destination);

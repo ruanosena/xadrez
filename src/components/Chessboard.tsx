@@ -1,8 +1,8 @@
 import { Fragment, HTMLAttributes, useCallback, useMemo, useRef } from "react";
-import { cn, getBoardDelimeters, getBoardXPosition, getBoardYPosition, samePosition } from "../lib/utils";
+import { cn, getBoardDelimeters, getBoardXPosition, getBoardYPosition } from "../lib/utils";
 import { VERTICAL_AXIS, HORIZONTAL_AXIS, GRID_SQUARE_SIZE } from "../lib/constants";
 import { Tile } from "./Tile";
-import { Piece, Position } from "../types";
+import { Piece, Position } from "../models";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
   updateAllowedMoves: () => void;
@@ -12,7 +12,7 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
 
 export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ...props }: Props) {
   const grabElt = useRef<HTMLElement>();
-  const grabPosition = useRef({} as Position);
+  const grabPosition = useRef(new Position(-1, -1));
 
   const ref = useCallback(
     async (node: HTMLDivElement | null) => {
@@ -55,10 +55,7 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
 
         node.addEventListener("pointerup", (e) => {
           if (grabElt.current) {
-            const newPosition: Position = {
-              x: getBoardXPosition(node, e),
-              y: getBoardYPosition(node, e),
-            };
+            const newPosition = new Position(getBoardXPosition(node, e), getBoardYPosition(node, e));
 
             playMove(grabPosition.current, newPosition)
               .catch(() => {
@@ -81,20 +78,28 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
 
   const board = useMemo(() => {
     const result: JSX.Element[] = [];
+    const currentPiece = grabElt.current && pieces.find((piece) => piece.position.samePosition(grabPosition.current));
 
     for (let j = VERTICAL_AXIS.length - 1; j >= 0; j--) {
       for (let i = 0; i < HORIZONTAL_AXIS.length; i++) {
         const number = j + i + 2;
-        const piece = pieces.find(({ position }) => samePosition(position, { x: i, y: j }));
+        const tilePosition = new Position(i, j);
+        const tilePiece = pieces.find(({ position: piecePosition }) => piecePosition.samePosition(tilePosition));
 
-        // Ao atualizar o tabuleiro checa se na peça atual há movimento permitido no "Tile" renderizado
-        const currentPiece =
-          grabElt.current && pieces.find((piece) => samePosition(piece.position, grabPosition.current));
+        // Ao rearranjar o tabuleiro checa se na peça atual há movimento permitido no "Tile" renderizado
         const highlight = currentPiece?.allowedMoves
-          ? currentPiece.allowedMoves.some((position) => samePosition(position, { x: i, y: j }))
+          ? currentPiece.allowedMoves.some((position) => position.samePosition(tilePosition))
           : false;
 
-        result.push(<Tile key={`${i},${j}`} number={number} imageSrc={piece?.imageSrc} highlight={highlight} />);
+        result.push(
+          <Tile
+            key={`${i},${j}`}
+            number={number}
+            imageSrc={tilePiece?.imageSrc}
+            label={tilePiece?.type}
+            highlight={highlight}
+          />,
+        );
       }
     }
     return result;

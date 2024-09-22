@@ -5,8 +5,9 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   number: number;
   imageSrc?: string;
   highlight: boolean;
+  label?: string;
 }
-export function Tile({ number, className, imageSrc, highlight, ...props }: Props) {
+export function Tile({ number, label, className, imageSrc, highlight, ...props }: Props) {
   return (
     <div
       {...(!imageSrc && { "data-tile": "blank" })}
@@ -23,15 +24,17 @@ export function Tile({ number, className, imageSrc, highlight, ...props }: Props
     >
       {!!imageSrc && (
         <div
+          aria-label={label}
           data-tile="piece"
           style={{ backgroundImage: `url(${imageSrc})` }}
           className={cn(
             "size-[100px] bg-[length:80%] bg-center bg-no-repeat hover:cursor-grab active:cursor-grabbing",
-            { relative: highlight },
+            {
+              "before:z-10 before:inline-block before:h-full before:w-full before:rounded-full before:border-[6px] before:border-black/40":
+                highlight,
+            },
           )}
-        >
-          {highlight && <span className="absolute z-10 h-full w-full rounded-full border-[6px] border-black/40" />}
-        </div>
+        />
       )}
     </div>
   );

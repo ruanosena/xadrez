@@ -1,29 +1,17 @@
-export interface Position {
-  x: number;
-  y: number;
-}
+import { Piece, Position } from "../models";
 
 export enum PieceType {
-  PAWN,
-  BISHOP,
-  KNIGHT,
-  ROOK,
-  QUEEN,
-  KING,
+  PAWN = "pawn",
+  BISHOP = "bishop",
+  KNIGHT = "knight",
+  ROOK = "rook",
+  QUEEN = "queen",
+  KING = "king",
 }
 
 export enum TeamType {
-  OPPONENT,
-  OUR,
-}
-
-export interface Piece {
-  imageSrc: string;
-  position: Position;
-  type: PieceType;
-  team: TeamType;
-  enPassant?: boolean;
-  allowedMoves?: Position[];
+  OPPONENT = "b",
+  OUR = "w",
 }
 
 export type Movement = (
@@ -34,3 +22,4 @@ export type Movement = (
 ) => boolean;
 
 export type AllowedMovement = (piece: Piece, boardState: Piece[]) => Position[];
+export { Piece };

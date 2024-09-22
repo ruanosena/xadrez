@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useMemo, useState } from "react";
-import { Piece, PieceType, Position, TeamType } from "../types";
+import { PieceType, TeamType } from "../types";
 import { Chessboard } from "./Chessboard";
 import { GRID_SQUARE_SIZE, HORIZONTAL_AXIS, INITIAL_BOARD_STATE } from "../lib/constants";
 import {
@@ -16,7 +16,7 @@ import {
   queenMove,
   rookMove,
 } from "../lib/referee";
-import { samePosition } from "../lib/utils";
+import { Piece, Position } from "../models";
 
 const MovementDict = {
   [PieceType.PAWN]: pawnMove,
@@ -106,9 +106,9 @@ export function Referee() {
       return new Promise((resolve, reject) => {
         // Rearranja as peças
         setPieces((pieces) => {
-          const piece = pieces.find(({ position }) => samePosition(position, origin));
+          const piece = pieces.find(({ position }) => position.samePosition(origin));
           if (piece) {
-            const newMove = !samePosition(destination, piece.position);
+            const newMove = !piece.position.samePosition(destination);
             if (newMove /* Critério prévio */) {
               const result: Piece[] = [];
               const pawnDirection = piece.team === TeamType.OUR ? 1 : -1;
@@ -116,12 +116,8 @@ export function Referee() {
               const enPassantMove = isEnPassantMove(piece.position, destination, piece.type, piece.team, pieces);
 
               if (enPassantMove) {
-                const targetPiece = pieces.find(({ position }) =>
-                  samePosition(position, {
-                    x: destination.x,
-                    y: destination.y - pawnDirection,
-                  }),
-                );
+                const targetPosition = new Position(destination.x, destination.y - pawnDirection);
+                const targetPiece = pieces.find(({ position }) => position.samePosition(targetPosition));
                 for (let pieceInTile of pieces) {
                   if (pieceInTile === piece) {
                     pieceInTile.enPassant = false;
@@ -136,7 +132,7 @@ export function Referee() {
                 resolve(true);
                 return result;
               } else if (validMove) {
-                const target = pieces.find(({ position }) => samePosition(position, destination));
+                const target = pieces.find(({ position }) => position.samePosition(destination));
                 for (let pieceInTile of pieces) {
                   if (pieceInTile === piece) {
                     // movimento especial
@@ -176,26 +172,23 @@ export function Referee() {
 
   const promotePawn = useCallback(
     (newPieceType: PieceType) => {
-      setPieces((pieces) =>
-        pieces.map((piece) => {
-          if (samePosition(promotionPawn!.position, piece.position)) {
-            piece.type = newPieceType;
-            piece.imageSrc = INITIAL_BOARD_STATE.find(
-              (initialPieceState) => initialPieceState.team === piece.team && initialPieceState.type === piece.type,
-            )!.imageSrc;
-          }
-          return piece;
-        }),
-      );
-      setPromotionPawn(null);
+      if (promotionPawn) {
+        setPieces((pieces) =>
+          pieces.map((piece) => {
+            if (promotionPawn.position.samePosition(piece.position)) {
+              piece.type = newPieceType;
+              piece.imageSrc = INITIAL_BOARD_STATE.find(
+                (initialPieceState) => initialPieceState.team === piece.team && initialPieceState.type === piece.type,
+              )!.imageSrc;
+            }
+            return piece;
+          }),
+        );
+        setPromotionPawn(null);
+      }
     },
     [promotionPawn],
   );
-
-  const promotionTeamType = useMemo(() => {
-    if (!promotionPawn) return [];
-    return promotionPawn.team === TeamType.OUR ? ["w", "White"] : ["b", "Black"];
-  }, [promotionPawn]);
 
   return (
     <Fragment>
@@ -213,8 +206,8 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/bishop_${promotionTeamType[0]}.png`}
-                alt={`${promotionTeamType[1]} Bishop`}
+                src={`/pieces/bishop_${promotionPawn.team}.png`}
+                alt={promotionPawn.type}
               />
             </div>
             <div
@@ -223,8 +216,8 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/knight_${promotionTeamType[0]}.png`}
-                alt={`${promotionTeamType[1]} Knight`}
+                src={`/pieces/knight_${promotionPawn.team}.png`}
+                alt={promotionPawn.type}
               />
             </div>
             <div
@@ -233,8 +226,8 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/rook_${promotionTeamType[0]}.png`}
-                alt={`${promotionTeamType[1]} Rook`}
+                src={`/pieces/rook_${promotionPawn.team}.png`}
+                alt={promotionPawn.type}
               />
             </div>
             <div
@@ -243,8 +236,8 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/queen_${promotionTeamType[0]}.png`}
-                alt={`${promotionTeamType[1]} Queen`}
+                src={`/pieces/queen_${promotionPawn.team}.png`}
+                alt={promotionPawn.type}
               />
             </div>
           </div>
