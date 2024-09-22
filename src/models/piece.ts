@@ -1,4 +1,5 @@
 import { PieceType, TeamType } from "../types";
+import { Pawn } from "./pieces/pawn";
 import { Position } from "./position";
 
 export class Piece {
@@ -6,12 +7,43 @@ export class Piece {
   position: Position;
   type: PieceType;
   team: TeamType;
-  enPassant?: boolean | undefined;
   allowedMoves?: Position[] | undefined;
   constructor(position: Position, type: PieceType, team: TeamType) {
     this.imageSrc = `./pieces/${type}_${team}.png`;
     this.position = position;
     this.type = type;
     this.team = team;
+  }
+
+  isPawn(): this is Pawn {
+    return this.type === PieceType.PAWN;
+  }
+
+  isRook(): boolean {
+    return this.type === PieceType.ROOK;
+  }
+
+  isKnight(): boolean {
+    return this.type === PieceType.KNIGHT;
+  }
+
+  isBishop(): boolean {
+    return this.type === PieceType.BISHOP;
+  }
+
+  isKing(): boolean {
+    return this.type === PieceType.KING;
+  }
+
+  isQueen(): boolean {
+    return this.type === PieceType.QUEEN;
+  }
+
+  samePiecePosition(pieceToCompare: typeof this): boolean {
+    return this.position.samePosition(pieceToCompare.position);
+  }
+
+  samePosition(positionToCompare: Position): boolean {
+    return this.position.samePosition(positionToCompare);
   }
 }

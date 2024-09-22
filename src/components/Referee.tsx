@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { PieceType, TeamType } from "../types";
 import { Chessboard } from "./Chessboard";
 import { GRID_SQUARE_SIZE, HORIZONTAL_AXIS, INITIAL_BOARD_STATE } from "../lib/constants";
@@ -67,8 +67,8 @@ export function Referee() {
 
   const isEnPassantMove = useCallback(
     (
-      piecePosition: Position,
-      newPosition: Position,
+      origin: Position,
+      destination: Position,
       pieceType: PieceType,
       pieceTeam: TeamType,
       boardState: Piece[],
@@ -77,14 +77,17 @@ export function Referee() {
 
       if (pieceType === PieceType.PAWN) {
         if (
-          (newPosition.x - piecePosition.x === -1 || newPosition.x - piecePosition.x === 1) &&
-          newPosition.y - piecePosition.y === pawnDirection
+          (destination.x - origin.x === -1 || destination.x - origin.x === 1) &&
+          destination.y - origin.y === pawnDirection
         ) {
-          const piece = boardState.find(
-            ({ position, enPassant }) =>
-              position.x === newPosition.x && position.y === newPosition.y - pawnDirection && enPassant,
+          const target = boardState.find(
+            (piece) =>
+              piece.position.x === destination.x &&
+              piece.position.y === destination.y - pawnDirection &&
+              piece.isPawn() &&
+              piece.enPassant,
           );
-          return !!piece;
+          return !!target;
         }
       }
 
@@ -106,47 +109,57 @@ export function Referee() {
       return new Promise((resolve, reject) => {
         // Rearranja as peças
         setPieces((pieces) => {
-          const piece = pieces.find(({ position }) => position.samePosition(origin));
-          if (piece) {
-            const newMove = !piece.position.samePosition(destination);
+          const playedPiece = pieces.find((piece) => piece.samePosition(origin));
+          if (playedPiece) {
+            const newMove = !playedPiece.samePosition(destination);
             if (newMove /* Critério prévio */) {
               const result: Piece[] = [];
-              const pawnDirection = piece.team === TeamType.OUR ? 1 : -1;
-              const validMove = isValidMove(piece.position, destination, piece.type, piece.team, pieces);
-              const enPassantMove = isEnPassantMove(piece.position, destination, piece.type, piece.team, pieces);
+              const validMove = isValidMove(
+                playedPiece.position,
+                destination,
+                playedPiece.type,
+                playedPiece.team,
+                pieces,
+              );
+              const enPassantMove = isEnPassantMove(
+                playedPiece.position,
+                destination,
+                playedPiece.type,
+                playedPiece.team,
+                pieces,
+              );
 
               if (enPassantMove) {
+                const pawnDirection = playedPiece.team === TeamType.OUR ? 1 : -1;
                 const targetPosition = new Position(destination.x, destination.y - pawnDirection);
-                const targetPiece = pieces.find(({ position }) => position.samePosition(targetPosition));
+                const targetPiece = pieces.find((piece) => piece.samePosition(targetPosition));
                 for (let pieceInTile of pieces) {
-                  if (pieceInTile === piece) {
-                    pieceInTile.enPassant = false;
-                    result.push({ ...pieceInTile, position: destination }); // atualiza a posição
+                  if (pieceInTile === playedPiece) {
+                    if (pieceInTile.isPawn()) pieceInTile.enPassant = false;
+                    result.push(new Piece(destination, pieceInTile.type, pieceInTile.team)); // atualiza a posição
                   } else if (pieceInTile !== targetPiece /* filtro do alvo */) {
-                    if (pieceInTile.type === PieceType.PAWN) {
-                      pieceInTile.enPassant = false;
-                    }
+                    if (pieceInTile.isPawn()) pieceInTile.enPassant = false;
                     result.push(pieceInTile);
                   }
                 }
                 resolve(true);
                 return result;
               } else if (validMove) {
-                const target = pieces.find(({ position }) => position.samePosition(destination));
+                const target = pieces.find((piece) => piece.samePosition(destination));
                 for (let pieceInTile of pieces) {
-                  if (pieceInTile === piece) {
-                    // movimento especial
-                    piece.enPassant = piece.type === PieceType.PAWN && Math.abs(piece.position.y - destination.y) === 2;
-                    // atualiza a posição em novo objeto
-                    const pieceUpdated = { ...piece, position: destination };
-                    result.push(pieceUpdated);
-                    if (pieceUpdated.type === PieceType.PAWN) {
+                  if (pieceInTile === playedPiece) {
+                    if (playedPiece.isPawn()) {
+                      // movimento especial
+                      playedPiece.enPassant = Math.abs(playedPiece.position.y - destination.y) === 2;
                       // checa se é promoção pro peão
-                      const promotionLine = piece.team === TeamType.OUR ? 7 : 0;
-                      if (destination.y === promotionLine) setPromotionPawn(pieceUpdated);
+                      const promotionLine = playedPiece.team === TeamType.OUR ? 7 : 0;
+                      if (destination.y === promotionLine) setPromotionPawn(playedPiece);
                     }
+                    // atualiza o objeto da posição
+                    playedPiece.position = destination;
+                    result.push(playedPiece);
                   } else if (pieceInTile !== target /* filtro do alvo */) {
-                    if (pieceInTile.type === PieceType.PAWN) {
+                    if (pieceInTile.isPawn()) {
                       pieceInTile.enPassant = false;
                     }
                     result.push(pieceInTile);
@@ -175,7 +188,7 @@ export function Referee() {
       if (promotionPawn) {
         setPieces((pieces) =>
           pieces.map((piece) => {
-            if (promotionPawn.position.samePosition(piece.position)) {
+            if (promotionPawn.samePiecePosition(piece)) {
               piece.type = newPieceType;
               piece.imageSrc = INITIAL_BOARD_STATE.find(
                 (initialPieceState) => initialPieceState.team === piece.team && initialPieceState.type === piece.type,

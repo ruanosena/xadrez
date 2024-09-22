@@ -78,13 +78,13 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
 
   const board = useMemo(() => {
     const result: JSX.Element[] = [];
-    const currentPiece = grabElt.current && pieces.find((piece) => piece.position.samePosition(grabPosition.current));
+    const currentPiece = grabElt.current && pieces.find((piece) => piece.samePosition(grabPosition.current));
 
     for (let j = VERTICAL_AXIS.length - 1; j >= 0; j--) {
       for (let i = 0; i < HORIZONTAL_AXIS.length; i++) {
         const number = j + i + 2;
         const tilePosition = new Position(i, j);
-        const tilePiece = pieces.find(({ position: piecePosition }) => piecePosition.samePosition(tilePosition));
+        const tilePiece = pieces.find((piece) => piece.samePosition(tilePosition));
 
         // Ao rearranjar o tabuleiro checa se na peça atual há movimento permitido no "Tile" renderizado
         const highlight = currentPiece?.allowedMoves
