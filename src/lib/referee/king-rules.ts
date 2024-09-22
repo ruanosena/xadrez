@@ -1,6 +1,6 @@
 import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
-import { AllowedMovement, Movement, Piece, Position } from "../../../types";
-import { samePosition } from "../../utils";
+import { AllowedMovement, Movement, Piece, Position } from "../../types";
+import { samePosition } from "../utils";
 
 export const kingMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {
   // Rei

@@ -1,4 +1,4 @@
-import { AllowedMovement, Movement, Piece, Position } from "../../../types";
+import { AllowedMovement, Movement, Piece, Position } from "../../types";
 import { tileIsEmptyOrOccupiedByOponennt } from "./general-rules";
 
 export const knightMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {

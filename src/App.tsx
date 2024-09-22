@@ -1,11 +1,9 @@
-import React from "react";
-import "./App.css";
-import { Chessboard } from "./components/Chessboard";
+import { Referee } from "./components/Referee";
 
 function App() {
   return (
     <div className="grid h-dvh place-content-center bg-gray-900">
-      <Chessboard />
+      <Referee />
     </div>
   );
 }

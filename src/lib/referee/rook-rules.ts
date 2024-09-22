@@ -1,7 +1,7 @@
 import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
-import { AllowedMovement, Movement, Piece, Position } from "../../../types";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../../constants";
-import { samePosition } from "../../utils";
+import { AllowedMovement, Movement, Piece, Position } from "../../types";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../constants";
+import { samePosition } from "../utils";
 
 export const rookMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {
   // Torre

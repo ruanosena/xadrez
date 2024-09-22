@@ -1,5 +1,5 @@
-import { AllowedMovement, Movement, Piece, Position, TeamType } from "../../../types";
-import { samePosition } from "../../utils";
+import { AllowedMovement, Movement, Piece, Position, TeamType } from "../../types";
+import { samePosition } from "../utils";
 import { tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
 
 export const pawnMove: Movement = (piecePosition, newPosition, pieceTeam, boardState) => {

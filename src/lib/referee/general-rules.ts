@@ -1,5 +1,5 @@
-import { Piece, Position, TeamType } from "../../../types";
-import { samePosition } from "../../utils";
+import { Piece, Position, TeamType } from "../../types";
+import { samePosition } from "../utils";
 
 export const tileIsOccupied = (tilePosition: Position, boardState: Piece[]): boolean => {
   const piece = boardState.find(({ position }) => samePosition(position, tilePosition));
