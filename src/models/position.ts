@@ -6,7 +6,7 @@ export class Position {
     this.y = y;
   }
 
-  samePosition(positionToCompare: typeof this): boolean {
+  samePosition(positionToCompare: Position): boolean {
     return this.x === positionToCompare.x && this.y === positionToCompare.y;
   }
 }

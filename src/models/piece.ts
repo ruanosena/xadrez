@@ -39,7 +39,7 @@ export class Piece {
     return this.type === PieceType.QUEEN;
   }
 
-  samePiecePosition(pieceToCompare: typeof this): boolean {
+  samePiecePosition(pieceToCompare: Piece): boolean {
     return this.position.samePosition(pieceToCompare.position);
   }
 

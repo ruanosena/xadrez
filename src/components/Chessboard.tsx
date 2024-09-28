@@ -5,7 +5,7 @@ import { Tile } from "./Tile";
 import { Piece, Position } from "../models";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
-  updateAllowedMoves: () => void;
+  updateAllowedMoves: (toClear?: boolean) => void;
   playMove: (origin: Position, destination: Position) => Promise<boolean>;
   pieces: Piece[];
 }
@@ -59,8 +59,8 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
 
             playMove(grabPosition.current, newPosition)
               .catch(() => {
+                // se não moveu reseta a peça
                 if (grabElt.current) {
-                  // se não moveu reseta a peça
                   grabElt.current.style.setProperty("position", "relative");
                   grabElt.current.style.removeProperty("top");
                   grabElt.current.style.removeProperty("left");
@@ -68,6 +68,7 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
               })
               .finally(() => {
                 grabElt.current = undefined;
+                updateAllowedMoves();
               });
           }
         });
