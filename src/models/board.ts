@@ -19,10 +19,12 @@ import { Position } from "./position";
 
 export class Board {
   pieces: Piece[];
+  totalTurns: number;
   movementDict: Record<PieceType, Movement>;
   possibleMovementDict: Record<PieceType, AllowedMovement>;
-  constructor(pieces: Piece[]) {
+  constructor(pieces: Piece[], totalTurns: number) {
     this.pieces = pieces;
+    this.totalTurns = totalTurns;
 
     this.movementDict = {
       [PieceType.PAWN]: pawnMove,
@@ -43,30 +45,37 @@ export class Board {
     };
   }
 
-  copy(): Board {
-    return new Board(this.pieces);
+  get currentTeam(): TeamType {
+    return this.totalTurns % 2 === 0 ? TeamType.OPPONENT : TeamType.OUR;
   }
 
   static CalculateAllMoves(board: Board): Board {
-    let updatedPieces = board.pieces.map((piece) => {
+    // calcula todos movimentos possiveis de todas peças
+    const updatedPieces = board.pieces.map((piece) => {
       piece.allowedMoves = board.getPossibleMoves(piece);
       return piece;
     });
 
+    // valida os movimentos permitidos para o rei
     board.checkKingMoves(updatedPieces);
 
-    return new Board(updatedPieces);
+    // remove os movimentos possíveis do time que não é a vez
+    for (const piece of updatedPieces.filter((piece) => piece.team !== board.currentTeam)) {
+      piece.allowedMoves = [];
+    }
+
+    return new Board(updatedPieces, board.totalTurns);
   }
 
   checkKingMoves(pieces: Piece[]) {
-    const king = pieces.find((piece) => piece.isKing() && piece.team === TeamType.OPPONENT);
+    const king = pieces.find((piece) => piece.isKing() && piece.team === this.currentTeam);
 
     if (king?.allowedMoves.length) {
       // Simula jogada do Rei
       const originalPosition = king.position;
 
       for (const move of king.allowedMoves) {
-        const simulatedBoard = new Board(pieces);
+        const simulatedBoard = new Board(pieces, this.totalTurns);
 
         const pieceAtDestination = simulatedBoard.pieces.find((piece) => piece.samePosition(move));
         // se há uma peça no destino alvo, remover-la
@@ -75,17 +84,19 @@ export class Board {
         }
 
         // rei sempre está presente no tabuleiro
-        const simulatedKing = simulatedBoard.pieces.find((piece) => piece.isKing() && piece.team === TeamType.OPPONENT);
+        const simulatedKing = simulatedBoard.pieces.find(
+          (piece) => piece.isKing() && piece.team === simulatedBoard.currentTeam,
+        );
         simulatedKing!.position = move;
 
-        for (const enemy of simulatedBoard.pieces.filter((piece) => piece.team === TeamType.OUR)) {
+        for (const enemy of simulatedBoard.pieces.filter((piece) => piece.team !== simulatedBoard.currentTeam)) {
           enemy.allowedMoves = simulatedBoard.getPossibleMoves(enemy, simulatedBoard.pieces);
         }
         let safe = true;
 
         // Determina se jogada é safe
         for (const piece of simulatedBoard.pieces) {
-          if (piece.team === TeamType.OPPONENT) continue;
+          if (piece.team === simulatedBoard.currentTeam) continue;
           if (piece.isPawn()) {
             const possiblePawnMoves = this.getPossibleMoves(piece, simulatedBoard.pieces);
             // compara jogadas com nova posição do rei
@@ -140,7 +151,13 @@ export class Board {
 
   static PlayMove(origin: Position, destination: Position, board: Board, promotionPawn: (piece: Pawn) => void): Board {
     const playedPiece = board.pieces.find((piece) => piece.samePosition(origin));
-    if (playedPiece) {
+    if (
+      playedPiece &&
+      // é a vez do branco
+      ((playedPiece.team === TeamType.OUR && board.totalTurns % 2 === 1) ||
+        // é a vez do preto
+        (playedPiece.team === TeamType.OPPONENT && board.totalTurns % 2 === 0))
+    ) {
       const newMove = !playedPiece.samePosition(destination);
       if (newMove && playedPiece.allowedMoves.length /* Critério prévio */) {
         const validMove = playedPiece.allowedMoves.some((move) => move.samePosition(destination));
@@ -168,7 +185,7 @@ export class Board {
             return result;
           }, []);
 
-          return new Board(piecesUpdated);
+          return new Board(piecesUpdated, ++board.totalTurns);
         } else if (validMove) {
           const target = board.pieces.find((piece) => piece.samePosition(destination));
 
@@ -193,7 +210,7 @@ export class Board {
             return result;
           }, []);
 
-          return new Board(piecesUpdated);
+          return new Board(piecesUpdated, ++board.totalTurns);
         }
       }
     }
@@ -208,6 +225,6 @@ export class Board {
       }
       return piece;
     });
-    return new Board(piecesUpdated);
+    return new Board(piecesUpdated, board.totalTurns);
   }
 }

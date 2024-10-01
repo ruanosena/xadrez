@@ -43,7 +43,8 @@ export function Referee() {
 
   return (
     <Fragment>
-      {/* Modal de promoção da peça peão - Backdrop inset */}
+      <p className="text-3xl">{board.totalTurns}</p>
+      {/* Modal de promoção da peça peão */}
       {promotionPawn && (
         <div className="absolute inset-0">
           {/* Modal */}
