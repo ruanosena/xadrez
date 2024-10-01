@@ -6,6 +6,10 @@ export class Position {
     this.y = y;
   }
 
+  clone(): Position {
+    return new Position(this.x, this.y);
+  }
+
   samePosition(positionToCompare: Position): boolean {
     return this.x === positionToCompare.x && this.y === positionToCompare.y;
   }

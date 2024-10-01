@@ -49,6 +49,13 @@ export class Board {
     return this.totalTurns % 2 === 0 ? TeamType.OPPONENT : TeamType.OUR;
   }
 
+  clone(pieces = this.pieces): Board {
+    return new Board(
+      pieces.map((piece) => piece.clone()),
+      this.totalTurns,
+    );
+  }
+
   static CalculateAllMoves(board: Board): Board {
     // calcula todos movimentos possiveis de todas peças
     const updatedPieces = board.pieces.map((piece) => {
@@ -56,8 +63,8 @@ export class Board {
       return piece;
     });
 
-    // valida os movimentos permitidos para o rei
-    board.checkKingMoves(updatedPieces);
+    // valida os movimentos permitidos do time
+    board.checkCurrentTeamMoves(updatedPieces);
 
     // remove os movimentos possíveis do time que não é a vez
     for (const piece of updatedPieces.filter((piece) => piece.team !== board.currentTeam)) {
@@ -67,56 +74,46 @@ export class Board {
     return new Board(updatedPieces, board.totalTurns);
   }
 
-  checkKingMoves(pieces: Piece[]) {
-    const king = pieces.find((piece) => piece.isKing() && piece.team === this.currentTeam);
+  checkCurrentTeamMoves(pieces: Piece[]) {
+    for (const piece of pieces.filter((piece) => piece.team === this.currentTeam)) {
+      if (!piece.allowedMoves.length) continue;
+      const originalPosition = piece.position;
+      // simula todas jogadas possíveis
+      for (const move of piece.allowedMoves) {
+        const simulatedBoard = this.clone(pieces);
 
-    if (king?.allowedMoves.length) {
-      // Simula jogada do Rei
-      const originalPosition = king.position;
+        // remove a peça no destino alvo
+        simulatedBoard.pieces = simulatedBoard.pieces.filter((sPiece) => !sPiece.samePosition(move));
 
-      for (const move of king.allowedMoves) {
-        const simulatedBoard = new Board(pieces, this.totalTurns);
-
-        const pieceAtDestination = simulatedBoard.pieces.find((piece) => piece.samePosition(move));
-        // se há uma peça no destino alvo, remover-la
-        if (pieceAtDestination) {
-          simulatedBoard.pieces = simulatedBoard.pieces.filter((piece) => !piece.samePosition(move));
-        }
-
-        // rei sempre está presente no tabuleiro
+        // pega a peça do tabuleiro simulado
+        const simulatedPiece = simulatedBoard.pieces.find((sPiece) => sPiece.samePiecePosition(piece))!;
+        simulatedPiece.position = move.clone();
+        // pega o rei do tabuleiro simulado
         const simulatedKing = simulatedBoard.pieces.find(
           (piece) => piece.isKing() && piece.team === simulatedBoard.currentTeam,
-        );
-        simulatedKing!.position = move;
+        )!;
 
+        // para toda peça inimiga, atualiza os movimentos possiveis
+        // e checa se o rei do time atual ficará em perigo
         for (const enemy of simulatedBoard.pieces.filter((piece) => piece.team !== simulatedBoard.currentTeam)) {
           enemy.allowedMoves = simulatedBoard.getPossibleMoves(enemy, simulatedBoard.pieces);
-        }
-        let safe = true;
 
-        // Determina se jogada é safe
-        for (const piece of simulatedBoard.pieces) {
-          if (piece.team === simulatedBoard.currentTeam) continue;
-          if (piece.isPawn()) {
-            const possiblePawnMoves = this.getPossibleMoves(piece, simulatedBoard.pieces);
-            // compara jogadas com nova posição do rei
-            if (possiblePawnMoves.some((position) => position.x !== piece.position.x && position.samePosition(move))) {
-              safe = false;
-              break;
+          if (enemy.isPawn()) {
+            if (
+              enemy.allowedMoves.some(
+                (sMove) => sMove.x !== enemy.position.x && sMove.samePosition(simulatedKing.position),
+              )
+            ) {
+              piece.allowedMoves = piece.allowedMoves.filter((possibleMove) => !possibleMove.samePosition(move));
             }
-          } else if (piece.allowedMoves.some((position) => position.samePosition(move))) {
-            safe = false;
-            break;
+          } else {
+            if (enemy.allowedMoves.some((sMove) => sMove.samePosition(simulatedKing.position))) {
+              piece.allowedMoves = piece.allowedMoves.filter((possibleMove) => !possibleMove.samePosition(move));
+            }
           }
         }
-
-        // remove dos movimentos permitidos
-        if (!safe) {
-          king.allowedMoves = king.allowedMoves.filter((aMove) => !aMove.samePosition(move));
-        }
       }
-
-      king.position = originalPosition;
+      piece.position = originalPosition;
     }
   }
 

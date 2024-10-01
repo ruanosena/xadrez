@@ -8,12 +8,21 @@ export class Piece {
   type: PieceType;
   team: TeamType;
   allowedMoves: Position[];
-  constructor(position: Position, type: PieceType, team: TeamType) {
+  constructor(position: Position, type: PieceType, team: TeamType, allowedMoves: Position[] = []) {
     this.imageSrc = `./pieces/${type}_${team}.png`;
     this.position = position;
     this.type = type;
     this.team = team;
-    this.allowedMoves = [];
+    this.allowedMoves = allowedMoves;
+  }
+
+  clone(): Piece {
+    return new Piece(
+      this.position.clone(),
+      this.type,
+      this.team,
+      this.allowedMoves.map((move) => move.clone()),
+    );
   }
 
   isPawn(): this is Pawn {
