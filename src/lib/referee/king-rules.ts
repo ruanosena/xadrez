@@ -87,3 +87,49 @@ export const getPossibleKingMoves: AllowedMovement = (king: Piece, boardState: P
 
   return moves;
 };
+
+// nesta função os movimentos inimigos já terão sido calculados
+export const getCastlingMoves: AllowedMovement = (king: Piece, boardState: Piece[]) => {
+  const moves: Position[] = [];
+
+  if (!king.hasMoved) {
+    // torres do mesmo time que ainda não foram movidas
+    const rooks = boardState.filter((piece) => piece.isRook() && piece.team === king.team && !piece.hasMoved);
+
+    // laço entre as torres
+    for (const rook of rooks) {
+      // determinar se é preciso ir para esquerda ou direita
+      const direction = rook.position.x - king.position.x > 0 ? 1 : -1;
+      // calcula o tile de lado ao rei, do lado da torre
+      const adjacentPosition = king.position.clone();
+      adjacentPosition.x += direction;
+
+      if (!rook.allowedMoves.some((move) => move.samePosition(adjacentPosition))) continue;
+      // a torre pode mover para o lado do rei
+
+      const concerningTiles = rook.allowedMoves.filter((move) => move.y === king.position.y);
+
+      // checa se em cada movimento possível do inimigo está presente nos movimentos entre rei e torre
+      const enemyPieces = boardState.filter((piece) => piece.team !== king.team);
+
+      let valid = true;
+
+      for (const enemy of enemyPieces) {
+        if (!enemy.allowedMoves.length) continue;
+        for (const move of enemy.allowedMoves) {
+          if (concerningTiles.some((tile) => tile.samePosition(move))) {
+            valid = false;
+          }
+          if (!valid) break;
+        }
+        if (!valid) break;
+      }
+
+      if (!valid) continue;
+
+      moves.push(rook.position.clone());
+    }
+  }
+
+  return moves;
+};

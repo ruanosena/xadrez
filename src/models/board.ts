@@ -1,5 +1,6 @@
 import {
   bishopMove,
+  getCastlingMoves,
   getPossibleBishopMoves,
   getPossibleKingMoves,
   getPossibleKnightMoves,
@@ -62,6 +63,11 @@ export class Board {
       piece.allowedMoves = board.getPossibleMoves(piece);
       return piece;
     });
+
+    // calcular movimentos da torre
+    for (const king of updatedPieces.filter((piece) => piece.isKing())) {
+      king.allowedMoves = [...king.allowedMoves, ...getCastlingMoves(king, updatedPieces)];
+    }
 
     // valida os movimentos permitidos do time
     board.checkCurrentTeamMoves(updatedPieces);
@@ -164,17 +170,33 @@ export class Board {
           playedPiece.type,
           playedPiece.team,
         );
+        const destinationPiece = board.pieces.find((piece) => piece.samePosition(destination));
+        if (playedPiece.isKing() && destinationPiece?.isRook() && destinationPiece.team === playedPiece.team) {
+          const direction = destinationPiece.position.x - playedPiece.position.x > 0 ? 1 : -1;
+          const newKingXPosition = playedPiece.position.x + direction * 2;
+          const updatedPieces = board.pieces.map((piece) => {
+            if (piece.samePiecePosition(playedPiece)) {
+              piece.position.x = newKingXPosition;
+            } else if (piece.samePiecePosition(destinationPiece)) {
+              piece.position.x = newKingXPosition - direction;
+            }
+            return piece;
+          });
+
+          return new Board(updatedPieces, ++board.totalTurns);
+        }
 
         if (enPassantMove) {
           const pawnDirection = playedPiece.team === TeamType.OUR ? 1 : -1;
           const targetPosition = new Position(destination.x, destination.y - pawnDirection);
           const targetPiece = board.pieces.find((piece) => piece.samePosition(targetPosition));
 
-          const piecesUpdated = board.pieces.reduce<Piece[]>((result, pieceInTile) => {
+          const updatedPieces = board.pieces.reduce<Piece[]>((result, pieceInTile) => {
             if (pieceInTile === playedPiece) {
-              if (pieceInTile.isPawn()) pieceInTile.enPassant = false;
-              pieceInTile.position = destination; // atualiza a posição
-              result.push(pieceInTile);
+              if (playedPiece.isPawn()) playedPiece.enPassant = false;
+              playedPiece.position = destination; // atualiza a posição
+              playedPiece.hasMoved = true;
+              result.push(playedPiece);
             } else if (pieceInTile !== targetPiece /* filtro do alvo */) {
               if (pieceInTile.isPawn()) pieceInTile.enPassant = false;
               result.push(pieceInTile);
@@ -182,11 +204,11 @@ export class Board {
             return result;
           }, []);
 
-          return new Board(piecesUpdated, ++board.totalTurns);
+          return new Board(updatedPieces, ++board.totalTurns);
         } else if (validMove) {
           const target = board.pieces.find((piece) => piece.samePosition(destination));
 
-          const piecesUpdated = board.pieces.reduce<Piece[]>((result, pieceInTile) => {
+          const updatedPieces = board.pieces.reduce<Piece[]>((result, pieceInTile) => {
             if (pieceInTile === playedPiece) {
               if (playedPiece.isPawn()) {
                 // movimento especial
@@ -197,6 +219,7 @@ export class Board {
               }
               // atualiza o objeto da posição
               playedPiece.position = destination;
+              playedPiece.hasMoved = true;
               result.push(playedPiece);
             } else if (pieceInTile !== target /* filtro do alvo */) {
               if (pieceInTile.isPawn()) {
@@ -207,7 +230,7 @@ export class Board {
             return result;
           }, []);
 
-          return new Board(piecesUpdated, ++board.totalTurns);
+          return new Board(updatedPieces, ++board.totalTurns);
         }
       }
     }
@@ -218,7 +241,7 @@ export class Board {
   static PromotePawn(newPieceType: PieceType, pawn: Pawn, board: Board): Board {
     const piecesUpdated = board.pieces.map((piece) => {
       if (pawn.samePiecePosition(piece)) {
-        return new Piece(piece.position, newPieceType, piece.team);
+        return new Piece(piece.position, newPieceType, piece.team, true);
       }
       return piece;
     });

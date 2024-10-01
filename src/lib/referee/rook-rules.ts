@@ -34,8 +34,11 @@ export const rookMove: Movement = (origin, destination, pieceTeam, boardState) =
 export const getPossibleRookMoves: AllowedMovement = (rook: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
 
-  // De cima
-  for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+  // Baixo
+  for (let i = 1, destination: Position; i < VERTICAL_AXIS.length; i++) {
+    // para de checar se o movimento está fora do tabuleiro
+    if (rook.position.y - i < 0) break;
+
     destination = new Position(rook.position.x, rook.position.y - i);
 
     if (!tileIsOccupied(destination, boardState)) {
@@ -48,8 +51,11 @@ export const getPossibleRookMoves: AllowedMovement = (rook: Piece, boardState: P
       break;
     }
   }
-  // De baixo
-  for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+  // Cima
+  for (let i = 1, destination: Position; i < VERTICAL_AXIS.length; i++) {
+    // para de checar se o movimento está fora do tabuleiro
+    if (rook.position.y + i < VERTICAL_AXIS.length - 1) break;
+
     destination = new Position(rook.position.x, rook.position.y + i);
 
     if (!tileIsOccupied(destination, boardState)) {
@@ -62,8 +68,10 @@ export const getPossibleRookMoves: AllowedMovement = (rook: Piece, boardState: P
       break;
     }
   }
-  // Da esquerda
+  // Esquerda
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+    // para de checar se o movimento está fora do tabuleiro
+    if (rook.position.x - i < 0) break;
     destination = new Position(rook.position.x - i, rook.position.y);
 
     if (!tileIsOccupied(destination, boardState)) {
@@ -76,8 +84,10 @@ export const getPossibleRookMoves: AllowedMovement = (rook: Piece, boardState: P
       break;
     }
   }
-  // Da direita
+  // Direita
   for (let i = 1, destination: Position; i < HORIZONTAL_AXIS.length; i++) {
+    // para de checar se o movimento está fora do tabuleiro
+    if (rook.position.x + i > HORIZONTAL_AXIS.length - 1) break;
     destination = new Position(rook.position.x + i, rook.position.y);
 
     if (!tileIsOccupied(destination, boardState)) {

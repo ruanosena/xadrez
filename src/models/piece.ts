@@ -8,12 +8,14 @@ export class Piece {
   type: PieceType;
   team: TeamType;
   allowedMoves: Position[];
-  constructor(position: Position, type: PieceType, team: TeamType, allowedMoves: Position[] = []) {
+  hasMoved: boolean;
+  constructor(position: Position, type: PieceType, team: TeamType, hasMoved: boolean, allowedMoves: Position[] = []) {
     this.imageSrc = `./pieces/${type}_${team}.png`;
     this.position = position;
     this.type = type;
     this.team = team;
     this.allowedMoves = allowedMoves;
+    this.hasMoved = hasMoved;
   }
 
   clone(): Piece {
@@ -21,6 +23,7 @@ export class Piece {
       this.position.clone(),
       this.type,
       this.team,
+      this.hasMoved,
       this.allowedMoves.map((move) => move.clone()),
     );
   }
