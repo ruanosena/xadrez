@@ -22,7 +22,7 @@ export const queenMove: Movement = (origin, destination, pieceTeam, boardState) 
   return false;
 };
 
-export const getAllowedQueenMoves: AllowedMovement = (queen: Piece, boardState: Piece[]) => {
+export const getPossibleQueenMoves: AllowedMovement = (queen: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
 
   // Cima

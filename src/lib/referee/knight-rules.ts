@@ -27,7 +27,7 @@ export const knightMove: Movement = (origin, destination, pieceTeam, boardState)
   return false;
 };
 
-export const getAllowedKnightMoves: AllowedMovement = (knight: Piece, boardState: Piece[]) => {
+export const getPossibleKnightMoves: AllowedMovement = (knight: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
 
   for (let i = -1; i < 2; i += 2) {

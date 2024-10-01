@@ -7,12 +7,13 @@ export class Piece {
   position: Position;
   type: PieceType;
   team: TeamType;
-  allowedMoves?: Position[] | undefined;
+  allowedMoves: Position[];
   constructor(position: Position, type: PieceType, team: TeamType) {
     this.imageSrc = `./pieces/${type}_${team}.png`;
     this.position = position;
     this.type = type;
     this.team = team;
+    this.allowedMoves = [];
   }
 
   isPawn(): this is Pawn {

@@ -17,7 +17,7 @@ export const kingMove: Movement = (origin, destination, pieceTeam, boardState) =
   return false;
 };
 
-export const getAllowedKingMoves: AllowedMovement = (king: Piece, boardState: Piece[]) => {
+export const getPossibleKingMoves: AllowedMovement = (king: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
   let destination: Position;
 

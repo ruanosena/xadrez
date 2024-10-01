@@ -11,7 +11,6 @@ export function Referee() {
   const [promotionPawn, setPromotionPawn] = useState<Pawn | null>(null);
 
   /* TODO:
-    coibir jogada perigosa do rei
     add castelamento
     add checkmate!
     add check

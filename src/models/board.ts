@@ -1,11 +1,11 @@
 import {
   bishopMove,
-  getAllowedBishopMoves,
-  getAllowedKingMoves,
-  getAllowedKnightMoves,
-  getAllowedPawnMoves,
-  getAllowedQueenMoves,
-  getAllowedRookMoves,
+  getPossibleBishopMoves,
+  getPossibleKingMoves,
+  getPossibleKnightMoves,
+  getPossiblePawnMoves,
+  getPossibleQueenMoves,
+  getPossibleRookMoves,
   kingMove,
   knightMove,
   pawnMove,
@@ -20,7 +20,7 @@ import { Position } from "./position";
 export class Board {
   pieces: Piece[];
   movementDict: Record<PieceType, Movement>;
-  allowedMovementDict: Record<PieceType, AllowedMovement>;
+  possibleMovementDict: Record<PieceType, AllowedMovement>;
   constructor(pieces: Piece[]) {
     this.pieces = pieces;
 
@@ -33,13 +33,13 @@ export class Board {
       [PieceType.KING]: kingMove,
     };
 
-    this.allowedMovementDict = {
-      [PieceType.PAWN]: getAllowedPawnMoves,
-      [PieceType.KNIGHT]: getAllowedKnightMoves,
-      [PieceType.BISHOP]: getAllowedBishopMoves,
-      [PieceType.ROOK]: getAllowedRookMoves,
-      [PieceType.QUEEN]: getAllowedQueenMoves,
-      [PieceType.KING]: getAllowedKingMoves,
+    this.possibleMovementDict = {
+      [PieceType.PAWN]: getPossiblePawnMoves,
+      [PieceType.KNIGHT]: getPossibleKnightMoves,
+      [PieceType.BISHOP]: getPossibleBishopMoves,
+      [PieceType.ROOK]: getPossibleRookMoves,
+      [PieceType.QUEEN]: getPossibleQueenMoves,
+      [PieceType.KING]: getPossibleKingMoves,
     };
   }
 
@@ -47,16 +47,70 @@ export class Board {
     return new Board(this.pieces);
   }
 
-  static CalculateAllMoves(board: Board) {
-    const piecesUpdated = board.pieces.map((piece) => {
-      piece.allowedMoves = board.getAllowedMoves(piece);
+  static CalculateAllMoves(board: Board): Board {
+    let updatedPieces = board.pieces.map((piece) => {
+      piece.allowedMoves = board.getPossibleMoves(piece);
       return piece;
     });
-    return new Board(piecesUpdated);
+
+    board.checkKingMoves(updatedPieces);
+
+    return new Board(updatedPieces);
   }
 
-  getAllowedMoves(piece: Piece): Position[] {
-    return this.allowedMovementDict[piece.type](piece, this.pieces);
+  checkKingMoves(pieces: Piece[]) {
+    const king = pieces.find((piece) => piece.isKing() && piece.team === TeamType.OPPONENT);
+
+    if (king?.allowedMoves.length) {
+      // Simula jogada do Rei
+      const originalPosition = king.position;
+
+      for (const move of king.allowedMoves) {
+        const simulatedBoard = new Board(pieces);
+
+        const pieceAtDestination = simulatedBoard.pieces.find((piece) => piece.samePosition(move));
+        // se há uma peça no destino alvo, remover-la
+        if (pieceAtDestination) {
+          simulatedBoard.pieces = simulatedBoard.pieces.filter((piece) => !piece.samePosition(move));
+        }
+
+        // rei sempre está presente no tabuleiro
+        const simulatedKing = simulatedBoard.pieces.find((piece) => piece.isKing() && piece.team === TeamType.OPPONENT);
+        simulatedKing!.position = move;
+
+        for (const enemy of simulatedBoard.pieces.filter((piece) => piece.team === TeamType.OUR)) {
+          enemy.allowedMoves = simulatedBoard.getPossibleMoves(enemy, simulatedBoard.pieces);
+        }
+        let safe = true;
+
+        // Determina se jogada é safe
+        for (const piece of simulatedBoard.pieces) {
+          if (piece.team === TeamType.OPPONENT) continue;
+          if (piece.isPawn()) {
+            const possiblePawnMoves = this.getPossibleMoves(piece, simulatedBoard.pieces);
+            // compara jogadas com nova posição do rei
+            if (possiblePawnMoves.some((position) => position.x !== piece.position.x && position.samePosition(move))) {
+              safe = false;
+              break;
+            }
+          } else if (piece.allowedMoves.some((position) => position.samePosition(move))) {
+            safe = false;
+            break;
+          }
+        }
+
+        // remove dos movimentos permitidos
+        if (!safe) {
+          king.allowedMoves = king.allowedMoves.filter((aMove) => !aMove.samePosition(move));
+        }
+      }
+
+      king.position = originalPosition;
+    }
+  }
+
+  getPossibleMoves(piece: Piece, pieces = this.pieces): Position[] {
+    return this.possibleMovementDict[piece.type](piece, pieces);
   }
 
   isValidMove(piecePosition: Position, newPosition: Position, pieceType: PieceType, pieceTeam: TeamType): boolean {
@@ -88,8 +142,8 @@ export class Board {
     const playedPiece = board.pieces.find((piece) => piece.samePosition(origin));
     if (playedPiece) {
       const newMove = !playedPiece.samePosition(destination);
-      if (newMove /* Critério prévio */) {
-        const validMove = board.isValidMove(playedPiece.position, destination, playedPiece.type, playedPiece.team);
+      if (newMove && playedPiece.allowedMoves.length /* Critério prévio */) {
+        const validMove = playedPiece.allowedMoves.some((move) => move.samePosition(destination));
         const enPassantMove = board.isEnPassantMove(
           playedPiece.position,
           destination,

@@ -42,7 +42,7 @@ export const pawnMove: Movement = (origin, destination, pieceTeam, boardState) =
   return false;
 };
 
-export const getAllowedPawnMoves: AllowedMovement = (pawn: Pawn, boardState: Piece[]) => {
+export const getPossiblePawnMoves: AllowedMovement = (pawn: Pawn, boardState: Piece[]) => {
   const moves: Position[] = [];
 
   const specialRow = pawn.team === TeamType.OUR ? 1 : 6;

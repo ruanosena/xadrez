@@ -31,7 +31,7 @@ export const rookMove: Movement = (origin, destination, pieceTeam, boardState) =
   return false;
 };
 
-export const getAllowedRookMoves: AllowedMovement = (rook: Piece, boardState: Piece[]) => {
+export const getPossibleRookMoves: AllowedMovement = (rook: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
 
   // De cima

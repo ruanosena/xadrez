@@ -24,7 +24,7 @@ export const bishopMove: Movement = (origin, destination, pieceTeam, boardState)
   return false;
 };
 
-export const getAllowedBishopMoves: AllowedMovement = (bishop: Piece, boardState: Piece[]) => {
+export const getPossibleBishopMoves: AllowedMovement = (bishop: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
 
   // Cima e direita
