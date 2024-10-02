@@ -83,7 +83,6 @@ export class Board {
   checkCurrentTeamMoves(pieces: Piece[]) {
     for (const piece of pieces.filter((piece) => piece.team === this.currentTeam)) {
       if (!piece.allowedMoves.length) continue;
-      const originalPosition = piece.position;
       // simula todas jogadas possíveis
       for (const move of piece.allowedMoves) {
         const simulatedBoard = this.clone(pieces);
@@ -119,7 +118,6 @@ export class Board {
           }
         }
       }
-      piece.position = originalPosition;
     }
   }
 
@@ -170,21 +168,6 @@ export class Board {
           playedPiece.type,
           playedPiece.team,
         );
-        const destinationPiece = board.pieces.find((piece) => piece.samePosition(destination));
-        if (playedPiece.isKing() && destinationPiece?.isRook() && destinationPiece.team === playedPiece.team) {
-          const direction = destinationPiece.position.x - playedPiece.position.x > 0 ? 1 : -1;
-          const newKingXPosition = playedPiece.position.x + direction * 2;
-          const updatedPieces = board.pieces.map((piece) => {
-            if (piece.samePiecePosition(playedPiece)) {
-              piece.position.x = newKingXPosition;
-            } else if (piece.samePiecePosition(destinationPiece)) {
-              piece.position.x = newKingXPosition - direction;
-            }
-            return piece;
-          });
-
-          return new Board(updatedPieces, ++board.totalTurns);
-        }
 
         if (enPassantMove) {
           const pawnDirection = playedPiece.team === TeamType.OUR ? 1 : -1;
@@ -208,29 +191,46 @@ export class Board {
         } else if (validMove) {
           const target = board.pieces.find((piece) => piece.samePosition(destination));
 
-          const updatedPieces = board.pieces.reduce<Piece[]>((result, pieceInTile) => {
-            if (pieceInTile === playedPiece) {
-              if (playedPiece.isPawn()) {
-                // movimento especial
-                playedPiece.enPassant = Math.abs(playedPiece.position.y - destination.y) === 2;
-                // checa se é promoção pro peão
-                const promotionLine = playedPiece.team === TeamType.OUR ? 7 : 0;
-                if (destination.y === promotionLine) promotionPawn(playedPiece);
+          if (playedPiece.isKing() && target?.isRook() && target.team === playedPiece.team) {
+            const direction = target.position.x - playedPiece.position.x > 0 ? 1 : -1;
+            const newKingXPosition = playedPiece.position.x + direction * 2;
+            const updatedPieces = board.pieces.map((piece) => {
+              if (piece.samePiecePosition(playedPiece)) {
+                piece.position.x = newKingXPosition;
+                piece.hasMoved = true;
+              } else if (piece.samePiecePosition(target)) {
+                piece.position.x = newKingXPosition - direction;
+                piece.hasMoved = true;
               }
-              // atualiza o objeto da posição
-              playedPiece.position = destination;
-              playedPiece.hasMoved = true;
-              result.push(playedPiece);
-            } else if (pieceInTile !== target /* filtro do alvo */) {
-              if (pieceInTile.isPawn()) {
-                pieceInTile.enPassant = false;
-              }
-              result.push(pieceInTile);
-            }
-            return result;
-          }, []);
+              return piece;
+            });
 
-          return new Board(updatedPieces, ++board.totalTurns);
+            return new Board(updatedPieces, ++board.totalTurns);
+          } else {
+            const updatedPieces = board.pieces.reduce<Piece[]>((result, pieceInTile) => {
+              if (pieceInTile === playedPiece) {
+                if (playedPiece.isPawn()) {
+                  // movimento especial
+                  playedPiece.enPassant = Math.abs(playedPiece.position.y - destination.y) === 2;
+                  // checa se é promoção pro peão
+                  const promotionLine = playedPiece.team === TeamType.OUR ? 7 : 0;
+                  if (destination.y === promotionLine) promotionPawn(playedPiece);
+                }
+                // atualiza o objeto da posição
+                playedPiece.position = destination;
+                playedPiece.hasMoved = true;
+                result.push(playedPiece);
+              } else if (pieceInTile !== target /* filtro do alvo */) {
+                if (pieceInTile.isPawn()) {
+                  pieceInTile.enPassant = false;
+                }
+                result.push(pieceInTile);
+              }
+              return result;
+            }, []);
+
+            return new Board(updatedPieces, ++board.totalTurns);
+          }
         }
       }
     }

@@ -11,7 +11,6 @@ export const INITIAL_BOARD: Board = new Board(
   [
     // PRETOS
     new Piece(new Position(0, 7), PieceType.ROOK, TeamType.OPPONENT, false),
-    new Piece(new Position(0, 7), PieceType.ROOK, TeamType.OPPONENT, false),
     new Piece(new Position(7, 7), PieceType.ROOK, TeamType.OPPONENT, false),
     new Piece(new Position(1, 7), PieceType.KNIGHT, TeamType.OPPONENT, false),
     new Piece(new Position(6, 7), PieceType.KNIGHT, TeamType.OPPONENT, false),

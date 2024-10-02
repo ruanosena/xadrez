@@ -11,9 +11,7 @@ export function Referee() {
   const [promotionPawn, setPromotionPawn] = useState<Pawn | null>(null);
 
   /* TODO:
-    add castelamento
     add checkmate!
-    add check
     add stalemate!!
   */
 
