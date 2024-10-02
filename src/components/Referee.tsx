@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useState } from "react";
-import { PieceType } from "../types";
+import { PieceType, TeamType } from "../types";
 import { Chessboard } from "./Chessboard";
 import { GRID_SQUARE_SIZE, HORIZONTAL_AXIS, INITIAL_BOARD } from "../lib/constants";
 import { Position } from "../models";
@@ -7,27 +7,30 @@ import { Board } from "../models/board";
 import { Pawn } from "../models/pieces/pawn";
 
 export function Referee() {
-  const [board, setBoard] = useState<Board>(INITIAL_BOARD);
+  const [board, setBoard] = useState<Board>(INITIAL_BOARD.clone());
   const [promotionPawn, setPromotionPawn] = useState<Pawn | null>(null);
 
   /* TODO:
-    add checkmate!
     add stalemate!!
   */
 
-  const updateAllowedMoves = useCallback(() => {
-    setBoard((prevBoard) => Board.CalculateAllMoves(prevBoard));
+  const updateAllowedMoves = useCallback((board?: Board) => {
+    setBoard((prevBoard) => Board.CalculateAllMoves(board ?? prevBoard));
   }, []);
 
-  const playMove = useCallback(async (origin: Position, destination: Position): Promise<boolean> => {
-    return new Promise((_resolve, reject) => {
-      setBoard((prevBoard) => {
-        const newBoard = Board.PlayMove(origin, destination, prevBoard, (pawn) => setPromotionPawn(pawn));
-        if (newBoard === prevBoard) reject();
-        return newBoard;
+  const playMove = useCallback(
+    async (origin: Position, destination: Position): Promise<boolean> => {
+      return new Promise((_resolve, reject) => {
+        setBoard((prevBoard) => {
+          const newBoard = Board.PlayMove(origin, destination, prevBoard, (pawn) => setPromotionPawn(pawn));
+          if (newBoard === prevBoard) reject();
+          updateAllowedMoves(newBoard);
+          return newBoard;
+        });
       });
-    });
-  }, []);
+    },
+    [updateAllowedMoves],
+  );
 
   const promotePawn = useCallback(
     (newPieceType: PieceType) => {
@@ -39,12 +42,16 @@ export function Referee() {
     [promotionPawn],
   );
 
+  const restartGame = useCallback(() => {
+    setBoard(INITIAL_BOARD.clone());
+  }, []);
+
   return (
     <Fragment>
-      <p className="text-3xl">{board.totalTurns}</p>
+      <p className="text-center text-3xl text-white">Rodadas: {board.totalTurns}</p>
       {/* Modal de promoção da peça peão */}
       {promotionPawn && (
-        <div className="absolute inset-0">
+        <div id="promotion-pawn-modal" className="absolute inset-0">
           {/* Modal */}
           <div
             style={{ width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`, height: `${GRID_SQUARE_SIZE * 3.5}px` }}
@@ -93,7 +100,29 @@ export function Referee() {
           </div>
         </div>
       )}
-      <Chessboard pieces={board.pieces} updateAllowedMoves={updateAllowedMoves} playMove={playMove} />;
+      {/* Modal de checkmate */}
+      {board.winningTeam && (
+        <div id="checkmate-modal" className="absolute inset-0">
+          {/* Modal */}
+          <div
+            style={{ width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`, height: `${GRID_SQUARE_SIZE * 3.5}px` }}
+            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-around bg-gray-600/70"
+          >
+            <div className="flex flex-col gap-12">
+              <span className="text-4xl">
+                O time vencedor é o {board.winningTeam === TeamType.OUR ? "branco" : "preto"}!
+              </span>
+              <button
+                className="cursor-pointer rounded-lg bg-[#779556] px-12 py-6 text-4xl text-white"
+                onClick={restartGame}
+              >
+                Jogar novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Chessboard pieces={board.pieces} updateAllowedMoves={updateAllowedMoves} playMove={playMove} />
     </Fragment>
   );
 }

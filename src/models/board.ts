@@ -19,13 +19,15 @@ import { Pawn } from "./pieces/pawn";
 import { Position } from "./position";
 
 export class Board {
+  winningTeam?: TeamType;
   pieces: Piece[];
   totalTurns: number;
   movementDict: Record<PieceType, Movement>;
   possibleMovementDict: Record<PieceType, AllowedMovement>;
-  constructor(pieces: Piece[], totalTurns: number) {
+  constructor(pieces: Piece[], totalTurns: number, winningTeam?: TeamType) {
     this.pieces = pieces;
     this.totalTurns = totalTurns;
+    this.winningTeam = winningTeam;
 
     this.movementDict = {
       [PieceType.PAWN]: pawnMove,
@@ -54,6 +56,7 @@ export class Board {
     return new Board(
       pieces.map((piece) => piece.clone()),
       this.totalTurns,
+      this.winningTeam,
     );
   }
 
@@ -72,12 +75,21 @@ export class Board {
     // valida os movimentos permitidos do time
     board.checkCurrentTeamMoves(updatedPieces);
 
-    // remove os movimentos possíveis do time que não é a vez
+    // remove os movimentos possíveis do time que não é a vez (adversário)
     for (const piece of updatedPieces.filter((piece) => piece.team !== board.currentTeam)) {
       piece.allowedMoves = [];
     }
 
-    return new Board(updatedPieces, board.totalTurns);
+    // checa se o time jogando ainda tem movimentos
+    // se não é checkmate
+    if (
+      updatedPieces.filter(({ team }) => team === board.currentTeam).some(({ allowedMoves }) => !!allowedMoves.length)
+    ) {
+      return new Board(updatedPieces, board.totalTurns);
+    }
+
+    board.winningTeam = board.currentTeam === TeamType.OUR ? TeamType.OPPONENT : TeamType.OUR;
+    return new Board(updatedPieces, board.totalTurns, board.winningTeam);
   }
 
   checkCurrentTeamMoves(pieces: Piece[]) {

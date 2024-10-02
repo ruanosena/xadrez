@@ -1,6 +1,7 @@
 import { tileIsEmptyOrOccupiedByOponennt, tileIsOccupied, tileIsOccupiedByOponnent } from "./general-rules";
 import { AllowedMovement, Movement } from "../../types";
 import { Piece, Position } from "../../models";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS } from "../constants";
 
 export const kingMove: Movement = (origin, destination, pieceTeam, boardState) => {
   // Rei
@@ -20,69 +21,93 @@ export const kingMove: Movement = (origin, destination, pieceTeam, boardState) =
 export const getPossibleKingMoves: AllowedMovement = (king: Piece, boardState: Piece[]) => {
   const moves: Position[] = [];
   let destination: Position;
+  function isValid(position: Position): boolean {
+    const invalid =
+      position.x < 0 ||
+      position.x > HORIZONTAL_AXIS.length - 1 ||
+      position.y < 0 ||
+      position.y > VERTICAL_AXIS.length - 1;
+    return !invalid;
+  }
 
   // Cima
   destination = new Position(king.position.x, king.position.y + 1);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Cima e esquerda
   destination = new Position(king.position.x - 1, king.position.y + 1);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Cima e direita
   destination = new Position(king.position.x + 1, king.position.y + 1);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Baixo
   destination = new Position(king.position.x, king.position.y - 1);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Baixo e esquerda
   destination = new Position(king.position.x - 1, king.position.y - 1);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Esquerda
   destination = new Position(king.position.x - 1, king.position.y);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Baixo e direita
   destination = new Position(king.position.x + 1, king.position.y - 1);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   // Direita
   destination = new Position(king.position.x + 1, king.position.y);
-  if (!tileIsOccupied(destination, boardState)) {
-    moves.push(destination);
-  } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
-    moves.push(destination);
+  if (isValid(destination)) {
+    if (!tileIsOccupied(destination, boardState)) {
+      moves.push(destination);
+    } else if (tileIsOccupiedByOponnent(destination, boardState, king.team)) {
+      moves.push(destination);
+    }
   }
 
   return moves;

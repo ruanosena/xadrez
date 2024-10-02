@@ -3,9 +3,10 @@ import { cn, getBoardDelimeters, getBoardXPosition, getBoardYPosition } from "..
 import { VERTICAL_AXIS, HORIZONTAL_AXIS, GRID_SQUARE_SIZE } from "../lib/constants";
 import { Tile } from "./Tile";
 import { Piece, Position } from "../models";
+import { Board } from "../models/board";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
-  updateAllowedMoves: (toClear?: boolean) => void;
+  updateAllowedMoves: (board?: Board) => void;
   playMove: (origin: Position, destination: Position) => Promise<boolean>;
   pieces: Piece[];
 }
