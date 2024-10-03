@@ -19,9 +19,10 @@ export function GridSizeProvider({ children }: GridSizeContextProps) {
   const [height, setHeight] = useState<number>(VERTICAL_AXIS.length * size);
 
   useEffect(() => {
-    const { clientWidth } = document.body;
+    const { innerHeight, innerWidth } = window;
+    const totalSize = Math.min(innerHeight, innerWidth);
 
-    setSize(Math.min(Math.trunc(clientWidth / HORIZONTAL_AXIS.length), GRID_SQUARE_SIZE));
+    setSize(Math.min(Math.trunc(totalSize / HORIZONTAL_AXIS.length), GRID_SQUARE_SIZE));
   }, []);
 
   useEffect(() => {

@@ -23,7 +23,7 @@ export function Tile({ number, label, className, imageSrc, highlight, ...props }
       className={cn(
         number % 2 === 0 ? "bg-[#6a9560]" : "bg-white",
         {
-          "before:h-4 before:w-4 before:rounded-full before:bg-black/40 sm:before:h-6 sm:before:w-6":
+          "before:h-4 before:w-4 before:rounded-full before:bg-black/40 sm:before:h-5 sm:before:w-5":
             highlight && !imageSrc,
         },
         "grid select-none place-content-center",
