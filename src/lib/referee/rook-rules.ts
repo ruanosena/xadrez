@@ -54,7 +54,7 @@ export const getPossibleRookMoves: AllowedMovement = (rook: Piece, boardState: P
   // Cima
   for (let i = 1, destination: Position; i < VERTICAL_AXIS.length; i++) {
     // para de checar se o movimento está fora do tabuleiro
-    if (rook.position.y + i < VERTICAL_AXIS.length - 1) break;
+    if (rook.position.y + i > VERTICAL_AXIS.length - 1) break;
 
     destination = new Position(rook.position.x, rook.position.y + i);
 
