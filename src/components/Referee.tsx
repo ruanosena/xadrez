@@ -64,7 +64,7 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/bishop_${promotionPawn.team}.png`}
+                src={`./pieces/bishop_${promotionPawn.team}.png`}
                 alt={promotionPawn.type}
               />
             </div>
@@ -74,7 +74,7 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/knight_${promotionPawn.team}.png`}
+                src={`./pieces/knight_${promotionPawn.team}.png`}
                 alt={promotionPawn.type}
               />
             </div>
@@ -84,7 +84,7 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/rook_${promotionPawn.team}.png`}
+                src={`./pieces/rook_${promotionPawn.team}.png`}
                 alt={promotionPawn.type}
               />
             </div>
@@ -94,7 +94,7 @@ export function Referee() {
             >
               <img
                 className="w-32 select-none"
-                src={`/pieces/queen_${promotionPawn.team}.png`}
+                src={`./pieces/queen_${promotionPawn.team}.png`}
                 alt={promotionPawn.type}
               />
             </div>
