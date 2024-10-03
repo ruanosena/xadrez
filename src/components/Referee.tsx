@@ -5,6 +5,7 @@ import { GRID_SQUARE_SIZE, HORIZONTAL_AXIS, INITIAL_BOARD } from "../lib/constan
 import { Position } from "../models";
 import { Board } from "../models/board";
 import { Pawn } from "../models/pieces/pawn";
+import { Turnsboard } from "./Turnsboard";
 
 export function Referee() {
   const [board, setBoard] = useState<Board>(INITIAL_BOARD.clone());
@@ -48,7 +49,7 @@ export function Referee() {
 
   return (
     <Fragment>
-      <p className="text-center text-3xl text-white">Rodadas: {board.totalTurns}</p>
+      <Turnsboard className="mb-2" totalTurns={board.totalTurns} />
       {/* Modal de promoção da peça peão */}
       {promotionPawn && (
         <div id="promotion-pawn-modal" className="absolute inset-0">

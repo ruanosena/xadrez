@@ -1,10 +1,13 @@
 import { Referee } from "./components/Referee";
+import { GridSizeProvider } from "./contexts/GridSizeContext";
 
 function App() {
   return (
-    <div className="grid h-dvh place-content-center bg-gray-900">
-      <Referee />
-    </div>
+    <GridSizeProvider>
+      <div className="grid h-dvh place-content-center bg-gray-900">
+        <Referee />
+      </div>
+    </GridSizeProvider>
   );
 }
 

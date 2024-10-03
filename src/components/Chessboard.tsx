@@ -1,9 +1,10 @@
 import { Fragment, HTMLAttributes, useCallback, useMemo, useRef } from "react";
 import { cn, getBoardDelimeters, getBoardXPosition, getBoardYPosition } from "../lib/utils";
-import { VERTICAL_AXIS, HORIZONTAL_AXIS, GRID_SQUARE_SIZE } from "../lib/constants";
+import { VERTICAL_AXIS, HORIZONTAL_AXIS } from "../lib/constants";
 import { Tile } from "./Tile";
 import { Piece, Position } from "../models";
 import { Board } from "../models/board";
+import { useGridSize } from "../contexts/GridSizeContext";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
   updateAllowedMoves: (board?: Board) => void;
@@ -14,6 +15,7 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
 export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ...props }: Props) {
   const grabElt = useRef<HTMLElement>();
   const grabPosition = useRef(new Position(-1, -1));
+  const { size, width, height } = useGridSize();
 
   const ref = useCallback(
     async (node: HTMLDivElement | null) => {
@@ -26,8 +28,8 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
             grabPosition.current.x = getBoardXPosition(node, e);
             grabPosition.current.y = getBoardYPosition(node, e);
 
-            const x = e.clientX - GRID_SQUARE_SIZE / 2;
-            const y = e.clientY - GRID_SQUARE_SIZE / 2;
+            const x = e.clientX - size / 2;
+            const y = e.clientY - size / 2;
 
             element.style.position = "absolute";
             element.style.left = `${x}px`;
@@ -40,8 +42,8 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
         node.addEventListener("pointermove", (e) => {
           if (grabElt.current) {
             const { maxX, maxY, minX, minY } = getBoardDelimeters(node);
-            const x = e.clientX - GRID_SQUARE_SIZE / 2;
-            const y = e.clientY - GRID_SQUARE_SIZE / 2;
+            const x = e.clientX - size / 2;
+            const y = e.clientY - size / 2;
 
             grabElt.current.style.position = "absolute";
             if (x < minX) grabElt.current.style.left = `${minX}px`;
@@ -75,7 +77,7 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
         });
       }
     },
-    [playMove, updateAllowedMoves],
+    [playMove, updateAllowedMoves, size],
   );
 
   const board = useMemo(() => {
@@ -111,10 +113,7 @@ export function Chessboard({ pieces, updateAllowedMoves, playMove, className, ..
     <Fragment>
       <div
         ref={ref}
-        style={{
-          width: `${GRID_SQUARE_SIZE * HORIZONTAL_AXIS.length}px`,
-          height: `${GRID_SQUARE_SIZE * VERTICAL_AXIS.length}px`,
-        }}
+        style={{ width: `${width}px`, height: `${height}px` }}
         className={cn("grid select-none grid-cols-8 grid-rows-8 bg-blue-600", className)}
         {...props}
       >
